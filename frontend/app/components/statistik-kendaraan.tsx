@@ -166,38 +166,35 @@ export default function StatistikKendaraan({
               scales: {
                 x: {
                   ticks: {
-                    autoSkip: false,
-                    maxRotation: 0,
+                    autoSkip: false, // Tampilkan 24 jam/hari/bulan di sumbu X
+                    maxRotation: 45,
+                    minRotation: 0,
                     font: {
-                      size: 11,
+                      size: 9,
                       weight: "bold",
                     },
                     color: "#374151",
-                    // 🔥 hanya tampil setiap kelipatan 10 index
-                    callback: function (value, index) {
-                      if (index % 10 === 0) {
-                        return labels[index] ?? "";
-                      }
-                      return "";
-                    },
                   },
                   grid: {
                     display: false,
                   },
+                  title: {
+                    display: true,
+                    text: periode === "harian" ? "Waktu (24 Jam)" : "Periode",
+                    font: { size: 12, weight: "bold" },
+                  },
                 },
                 y: {
                   beginAtZero: true,
+                  suggestedMax: 100, // Menghindari skala hanya mengikuti data tertinggi
                   ticks: {
-                    stepSize: 10,
+                    stepSize: 10, // Kelipatan 10 di sumbu Y
                     precision: 0,
                   },
                   title: {
                     display: true,
                     text: "Jumlah Kendaraan",
-                    font: {
-                      size: 12,
-                      weight: "bold",
-                    },
+                    font: { size: 12, weight: "bold" },
                   },
                 },
               },

@@ -14,6 +14,8 @@ const {
   updateSlotParkir,
 } = require("../controllers/adminController");
 
+const { parkirManual } = require("../controllers/parkirController");
+
 /**
  * ====================================================
  * AUTH ADMIN
@@ -41,6 +43,9 @@ router.delete("/pengguna/:npm", hapusPengguna);
 
 // UPDATE KUOTA (INDIVIDU / GLOBAL)
 router.put("/kuota", updateKuotaParkir);
+
+// AKSI PARKIR MANUAL
+router.post("/parkir/manual", parkirManual);
 
 /**
  * ====================================================

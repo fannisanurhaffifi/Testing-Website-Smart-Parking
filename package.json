@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "node-cron": "^4.2.1",
-    "pdfkit": "^0.17.2",
-    "socket.io": "^4.8.3"
-  }
-}

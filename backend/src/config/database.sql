@@ -4,11 +4,11 @@
 
 show databases;
 
-CREATE DATABASE IF NOT EXISTS parkir_db;
+CREATE DATABASE IF NOT EXISTS smartpark;
 
-drop database if exists parkir_db;
+drop database if exists smartpark;
 
-USE parkir_db;
+USE smartpark;
 
 -- =========================
 -- TABEL PENGGUNA

@@ -447,7 +447,7 @@ const dashboardSummary = async (req, res) => {
   try {
     const [slotResults, terisiResults, aktifResults, kuotaResults] = await Promise.all([
       query("SELECT COALESCE(SUM(jumlah),0) AS total FROM slot_parkir"),
-      query("SELECT COUNT(*) AS total FROM log_parkir WHERE status_parkir='MASUK'"),
+      query("SELECT COUNT(*) AS total FROM log_parkir WHERE status_parkir='MASUK' AND waktu_keluar IS NULL"),
       query("SELECT COUNT(*) AS total FROM pengguna WHERE status_akun=1"),
       query("SELECT batas_parkir FROM kuota_parkir WHERE npm IS NULL ORDER BY id_kuota DESC LIMIT 1"),
     ]);
@@ -460,8 +460,8 @@ const dashboardSummary = async (req, res) => {
     return res.status(200).json({
       status: "success",
       data: {
-        total_slot,
-        terisi,
+        total_slot: total_slot,
+        terisi: terisi,
         tersedia: Math.max(total_slot - terisi, 0),
         pengguna_aktif,
         kuota_global,

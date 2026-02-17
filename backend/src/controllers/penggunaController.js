@@ -1,17 +1,19 @@
 const { query, pool } = require("../config/database");
 const { sendOtpEmail } = require("../utils/lupapswd");
-const { sendRegistrationPendingEmail } = require("../utils/email");
+const { sendRegistrationSuccessEmail, sendRegistrationPendingEmail } = require("../utils/email");
 const bcrypt = require("bcryptjs");
 
 /* =====================================================
    REGISTER PENGGUNA
 ===================================================== */
 const registerPengguna = async (req, res) => {
-  const connection = await pool.getConnection();
+  let connection;
 
   try {
     const { npm, nama, email, jurusan, prodi, password, plat_nomor } = req.body;
     const stnk = req.file ? req.file.filename : null;
+
+    console.log("📥 REGISTER REQUEST:", { npm, nama, email });
 
     if (!npm || !nama || !email || !jurusan || !prodi || !password || !plat_nomor) {
       return res.status(400).json({
@@ -19,6 +21,8 @@ const registerPengguna = async (req, res) => {
         message: "Semua field wajib diisi",
       });
     }
+
+    connection = await pool.getConnection();
 
     const [existing] = await connection.query(
       "SELECT npm FROM pengguna WHERE npm = ? OR email = ?",
@@ -39,7 +43,7 @@ const registerPengguna = async (req, res) => {
     await connection.query(
       `INSERT INTO pengguna
        (npm, nama, email, jurusan, prodi, password, status_akun, tanggal_daftar)
-       VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
+       VALUES (?, ?, ?, ?, ?, ?, 1, NOW())`,
       [npm, nama, email, jurusan, prodi, hashedPassword]
     );
 
@@ -49,37 +53,53 @@ const registerPengguna = async (req, res) => {
       [npm, plat_nomor, stnk]
     );
 
-    // ✅ LANGSUNG DAPAT KUOTA 30 SAAT DAFTAR
+    const [vehicle] = await connection.query(
+      "SELECT id_kendaraan FROM kendaraan WHERE npm = ? ORDER BY id_kendaraan DESC LIMIT 1",
+      [npm]
+    );
+
+    if (vehicle.length > 0) {
+      const id_kendaraan = vehicle[0].id_kendaraan;
+      const auto_rfid = Math.random().toString(16).slice(2, 10).toUpperCase();
+
+      await connection.query(
+        "INSERT INTO rfid (id_kendaraan, kode_rfid, status_rfid, tanggal_aktif) VALUES (?, ?, 1, NOW())",
+        [id_kendaraan, auto_rfid, 1]
+      );
+      console.log(`✅ RFID ${auto_rfid} generated automatically for vehicle ID ${id_kendaraan}`);
+    }
+
     await connection.query(
       "INSERT INTO kuota_parkir (npm, batas_parkir, jumlah_terpakai) VALUES (?, 30, 0)",
       [npm]
     );
 
     await connection.commit();
+    console.log(`✅ Database transaction committed for NPM ${npm}`);
 
-    // kirim email notifikasi (tidak menggagalkan registrasi jika error)
-    sendRegistrationPendingEmail(email, nama);
+    // Notification emails (non-critical)
+    sendRegistrationSuccessEmail(email, nama).catch(e => console.error("Email Error:", e));
 
-    // 📡 Real-time update untuk Admin
     const io = req.app.get("io");
     if (io) io.emit("user_update", { action: "REGISTER", npm });
 
     return res.status(201).json({
       status: "success",
-      message: "Registrasi berhasil, menunggu verifikasi admin",
+      message: "Registrasi berhasil, akun Anda sudah aktif dan silakan login",
     });
   } catch (error) {
-    await connection.rollback();
-    console.error("REGISTER ERROR:", error);
+    if (connection) await connection.rollback();
+    console.error("🔥 REGISTER ERROR:", error);
 
     return res.status(500).json({
       status: "error",
-      message: "Gagal melakukan registrasi",
+      message: "Gagal melakukan registrasi: " + (error.message || "Internal server error"),
     });
   } finally {
-    connection.release();
+    if (connection) connection.release();
   }
 };
+
 
 /* =====================================================
    LOGIN

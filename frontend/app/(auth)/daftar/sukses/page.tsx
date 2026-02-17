@@ -25,14 +25,12 @@ export default function DaftarSuksesPage() {
 
         {/* MESSAGE */}
         <p className="mb-4 text-sm text-gray-700">
-          Permohonan pembuatan akun Anda telah berhasil dikirim dan saat ini
-          sedang menunggu proses verifikasi oleh admin.
+          Selamat! Akun Anda telah berhasil dibuat dan saat ini sudah
+          dalam status <strong>Aktif</strong>.
         </p>
 
-        <div className="mb-5 rounded-lg bg-[#E9EBEE] p-3 text-xs text-gray-700">
-          Setelah akun Anda disetujui (ACC) oleh admin, Anda dapat langsung
-          masuk menggunakan akun yang telah didaftarkan.
-        </div>
+
+
 
         {/* BUTTON KE ROOT (HALAMAN MASUK) */}
         <Link

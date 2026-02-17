@@ -4,17 +4,20 @@ const getStatCardParkir = async (req, res) => {
   try {
     const { npm } = req.query;
 
-    // ===== SLOT TERSEDIA (SISA SECARA FISIK) =====
-    const slotRows = await db.query("SELECT SUM(jumlah) AS sisa FROM slot_parkir");
-    const tersedia = parseInt(slotRows[0]?.sisa || 0);
+    // ===== KAPASITAS TOTAL =====
+    const capRows = await db.query("SELECT SUM(jumlah) AS total FROM slot_parkir");
+    const kapasitas = parseInt(capRows[0]?.total || 0);
 
     // ===== TERISI (KENDARAAN SEDANG PARKIR) =====
     const terisiRows = await db.query(`
       SELECT COUNT(*) AS total
       FROM log_parkir
-      WHERE status_parkir = 'MASUK'
+      WHERE status_parkir = 'MASUK' AND waktu_keluar IS NULL
     `);
     const terisi = parseInt(terisiRows[0]?.total || 0);
+
+    // ===== TERSEDIA =====
+    const tersedia = Math.max(kapasitas - terisi, 0);
 
     // ===== KESEMPATAN PARKIR (KUOTA MAHASISWA) =====
     let kesempatan_parkir = 0;

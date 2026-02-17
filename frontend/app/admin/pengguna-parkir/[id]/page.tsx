@@ -231,7 +231,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
     if (!confirmAction) return;
 
     try {
-      const res = await fetch("/api/admin/pengguna/status", {
+      const res = await fetch("/api/admin/pengguna/verifikasi", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ npm, status_akun: status }),

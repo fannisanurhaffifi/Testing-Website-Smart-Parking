@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Check, X, Ban, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Check, X, Ban, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogIn, LogOut } from "lucide-react";
 import { io } from "socket.io-client";
 
 type User = {
@@ -122,6 +122,33 @@ export default function DataPenggunaTable({
     };
   }, []);
 
+  const handleManualPark = async (npm: string, aksi: "MASUK" | "KELUAR") => {
+    const confirm = window.confirm(`Lakukan proses ${aksi} manual untuk NPM ${npm}?`);
+    if (!confirm) return;
+
+    try {
+      setActionLoading(true);
+      const res = await fetch("/api/admin/parkir/manual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ npm, aksi }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message);
+        await fetchUsers();
+      } else {
+        alert(data.message || "Gagal melakukan aksi manual");
+      }
+    } catch (error) {
+      console.error("MANUAL PARK ERROR:", error);
+      alert("Terjadi kesalahan sistem");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const updateStatus = async (npm: string, status: number) => {
     let message = "Aktifkan hak parkir pengguna ini?";
     if (status === 2) message = "Blokir hak parkir pengguna ini?";
@@ -133,7 +160,7 @@ export default function DataPenggunaTable({
     try {
       setActionLoading(true);
 
-      const res = await fetch("/api/admin/pengguna/status", {
+      const res = await fetch("/api/admin/pengguna/verifikasi", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ npm, status_akun: status }),
@@ -311,6 +338,9 @@ export default function DataPenggunaTable({
 
                   <Td>
                     <div className="flex justify-center gap-1 md:gap-2">
+                      {/* AKSI PARKIR MANUAL SUDAH DIPINDAHKAN KE DASHBOARD MAHASISWA */}
+
+
                       {/* JIKA STATUS MENUNGGU (0) → VALIDASI (HIJAU) & TOLAK (MERAH) */}
                       {user.status_akun === 0 ? (
                         <>

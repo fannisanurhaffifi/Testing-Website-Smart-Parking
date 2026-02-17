@@ -13,7 +13,7 @@ const {
    getProfilPengguna,
    changePassword,
 } = require("../controllers/penggunaController");
-
+const { parkirManual } = require("../controllers/parkirController");
 const upload = require("../utils/upload");
 
 /* ====================================================
@@ -61,5 +61,8 @@ router.get("/users/riwayat/:npm", riwayatParkirPengguna);
 
 // CHANGE PASSWORD (langsung tanpa OTP - untuk halaman profil)
 router.post("/users/change-password", changePassword);
+
+// AKSI PARKIR MANUAL (MAHASISWA)
+router.post("/parkir/manual", parkirManual);
 
 module.exports = router;

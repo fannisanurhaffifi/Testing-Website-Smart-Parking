@@ -52,6 +52,33 @@ const sendVerificationEmail = async (toEmail) => {
     }
 };
 
+const sendRegistrationSuccessEmail = async (toEmail, nama) => {
+    try {
+        if (!toEmail || toEmail.trim() === "") {
+            throw new Error("Email penerima tidak valid atau kosong");
+        }
+
+        console.log("Mengirim email penegasan ke:", toEmail);
+
+        const info = await transporter.sendMail({
+            from: `"Smart Parking" <${process.env.EMAIL_USER}>`,
+            to: toEmail,
+            subject: "Pendaftaran Berhasil - Akun Aktif",
+            html: `
+        <h3>Halo ${nama},</h3>
+        <p>Selamat! Pendaftaran Anda di sistem Smart Parking telah berhasil.</p>
+        <p>Akun Anda kini sudah <strong>Aktif</strong> dan dapat langsung digunakan.</p>
+        <p>Silakan login menggunakan email dan kata sandi yang telah Anda daftarkan.</p>
+      `,
+        });
+
+        console.log("✅ Email sukses dikirim:", info.messageId);
+        return info;
+    } catch (error) {
+        console.error("❌ Gagal mengirim email sukses:", error.message);
+    }
+};
+
 const sendRegistrationPendingEmail = async (toEmail, nama) => {
     try {
         if (!toEmail || toEmail.trim() === "") {
@@ -109,6 +136,7 @@ const sendRejectionEmail = async (toEmail, nama, alasan = "Data tidak valid atau
 
 module.exports = {
     sendVerificationEmail,
+    sendRegistrationSuccessEmail,
     sendRegistrationPendingEmail,
     sendRejectionEmail
 };
