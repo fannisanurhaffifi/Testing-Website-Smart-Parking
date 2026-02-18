@@ -179,7 +179,7 @@ export default function AdminDashboardPage() {
 
         <StatCard title="Terisi" value={summary.terisi} unit="Kendaraan" />
         <StatCard title="Tersedia" value={summary.tersedia} unit="Slot" />
-        <StatCard title="Pengguna Aktif" value={summary.pengguna_aktif} unit="User" />
+        <StatCard title="Pengguna Aktif" value={summary.pengguna_aktif} unit="Pengguna" />
       </div>
 
       {/* ================= STATISTIK ================= */}

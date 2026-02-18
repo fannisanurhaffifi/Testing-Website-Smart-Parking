@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import StatCard from "@/app/components/StatCard";
 import { io } from "socket.io-client";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
 /* ===== TIPE DATA RIWAYAT ===== */
 type RiwayatMasuk = {
@@ -30,6 +31,9 @@ export default function InformasiParkirPage() {
   });
 
   const [riwayat, setRiwayat] = useState<RiwayatMasuk[]>([]);
+  const [limit, setLimit] = useState(10);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const fetchRef = useRef<any>(null);
   const riwayatRef = useRef<any>(null);
@@ -69,7 +73,7 @@ export default function InformasiParkirPage() {
       }
 
       const res = await fetch(
-        `/api/pengguna/users/riwayat/${npm}`,
+        `/api/users/riwayat/${npm}`,
         { cache: "no-store", signal },
       );
 
@@ -92,13 +96,16 @@ export default function InformasiParkirPage() {
         }));
 
         setRiwayat(mapped);
+        setTotal(mapped.length);
       } else {
         setRiwayat([]);
+        setTotal(0);
       }
     } catch (error: any) {
       if (error.name !== "AbortError") {
         console.error("Gagal mengambil riwayat parkir:", error);
         setRiwayat([]);
+        setTotal(0);
       }
     } finally {
       setLoadingRiwayat(false);
@@ -169,6 +176,16 @@ export default function InformasiParkirPage() {
     setLoading(false);
   };
 
+  // Pagination Logic
+  const totalPages = Math.ceil(total / limit);
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
   const statusParkir = statcard.tersedia === 0 ? "Penuh" : "Tersedia";
 
   return (
@@ -205,36 +222,144 @@ export default function InformasiParkirPage() {
       </section>
 
       {/* RIWAYAT PARKIR */}
-      <section className="rounded-xl border bg-white p-5 shadow-sm">
-        <h3 className="mb-4 text-sm font-semibold text-gray-800">
-          Riwayat Parkir Anda
-        </h3>
+      <section className="rounded-xl border border-gray-100 bg-white p-2 md:p-5 shadow-sm">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-1">
+          <h3 className="text-sm font-semibold text-gray-800">
+            Riwayat Parkir Anda
+          </h3>
+
+          <div className="flex items-center gap-2 text-[10px] md:text-xs">
+            <span className="text-gray-500">Tampilkan</span>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="rounded border border-gray-300 px-2 py-1 focus:border-[#1F3A93] focus:outline-none"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span className="text-gray-500">data per halaman</span>
+          </div>
+        </div>
 
         {loadingRiwayat ? (
-          <p className="text-xs text-gray-500">Memuat riwayat...</p>
+          <p className="text-xs text-gray-500 px-1">Memuat riwayat...</p>
         ) : riwayat.length > 0 ? (
-          <table className="w-full text-xs border-collapse">
-            <thead className="bg-gray-100">
-              <tr>
-                <Th>Tanggal</Th>
-                <Th>Waktu Masuk</Th>
-                <Th>Waktu Keluar</Th>
-                <Th>Status</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {riwayat.map((item, index) => (
-                <tr key={index} className="border-t text-center">
-                  <Td>{item.tanggal}</Td>
-                  <Td>{item.waktuMasuk}</Td>
-                  <Td>{item.waktuKeluar ?? "-"}</Td>
-                  <Td>{item.status}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse min-w-[500px]">
+                <thead className="bg-gray-100 text-gray-700">
+                  <tr>
+                    <Th>No</Th>
+                    <Th>Tanggal</Th>
+                    <Th>Waktu Masuk</Th>
+                    <Th>Waktu Keluar</Th>
+                    <Th>Status</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {riwayat.slice((page - 1) * limit, page * limit).map((item, index) => (
+                    <tr
+                      key={index}
+                      className="border-t text-center hover:bg-[#F4F6F8] transition-colors"
+                    >
+                      <Td className="text-gray-500 text-[11px]">
+                        {(page - 1) * limit + index + 1}
+                      </Td>
+                      <Td className="font-medium text-gray-700">{item.tanggal}</Td>
+                      <Td>{item.waktuMasuk}</Td>
+                      <Td>{item.waktuKeluar ?? "-"}</Td>
+                      <Td>
+                        <span
+                          className={`rounded-full px-3 py-1 text-[10px] font-semibold whitespace-nowrap ${item.status === "Masuk"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-600"
+                            }`}
+                        >
+                          {item.status.toUpperCase()}
+                        </span>
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* PAGINATION */}
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-1 text-xs text-gray-600 border-t pt-4">
+              {/* Status Info */}
+              <div>
+                Menampilkan <span className="font-semibold">{(page - 1) * limit + 1}</span> -{" "}
+                <span className="font-semibold">{Math.min(page * limit, total)}</span> dari{" "}
+                <span className="font-semibold">{total}</span> data
+              </div>
+
+              {/* Pagination Buttons */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                  className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 transition"
+                  title="Awal"
+                >
+                  <ChevronsLeft size={16} />
+                </button>
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 transition"
+                  title="Kembali"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {/* Page Numbers (Desktop) */}
+                <div className="hidden sm:flex items-center gap-1 mx-1">
+                  {getPageNumbers().map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setPage(num)}
+                      className={`w-7 h-7 rounded flex items-center justify-center font-medium transition ${page === num
+                        ? "bg-[#1F3A93] text-white"
+                        : "hover:bg-gray-100 text-gray-700"
+                        }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Mobile View Page Indicator */}
+                <span className="sm:hidden mx-2 font-medium">
+                  {page} / {totalPages}
+                </span>
+
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 transition"
+                  title="Lanjut"
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <button
+                  onClick={() => setPage(totalPages)}
+                  disabled={page >= totalPages}
+                  className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 transition"
+                  title="Akhir"
+                >
+                  <ChevronsRight size={16} />
+                </button>
+              </div>
+            </div>
+          </>
         ) : (
-          <p className="text-xs text-gray-500">Belum ada riwayat parkir</p>
+          <p className="text-xs text-gray-500 px-1">Belum ada riwayat parkir</p>
         )}
       </section>
     </div>
@@ -250,6 +375,16 @@ function Th({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Td({ children }: { children: React.ReactNode }) {
-  return <td className="px-3 py-2 text-xs">{children}</td>;
+function Td({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <td className={`px-3 py-2 text-xs text-gray-600 ${className}`}>
+      {children}
+    </td>
+  );
 }

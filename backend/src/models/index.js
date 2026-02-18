@@ -6,7 +6,7 @@ const sequelize = new Sequelize('parkir_db', 'root', '', {
 const Pengguna = require('./Pengguna')(sequelize, DataTypes);
 const Admin = require('./admin')(sequelize, DataTypes);
 const Kendaraan = require('./kendaraan')(sequelize, DataTypes);
-const RFID = require('./rfid')(sequelize, DataTypes);
+const RFID = null; // Removed
 const SlotParkir = require('./slotParkir')(sequelize, DataTypes);
 const KuotaParkir = require('./kuotaParkir')(sequelize, DataTypes);
 const LogParkir = require('./logParkir')(sequelize, DataTypes);
@@ -14,8 +14,7 @@ const LogParkir = require('./logParkir')(sequelize, DataTypes);
 Pengguna.hasMany(Kendaraan, { foreignKey: 'npm' });
 Kendaraan.belongsTo(Pengguna, { foreignKey: 'npm' });
 
-Kendaraan.hasOne(RFID, { foreignKey: 'id_kendaraan' });
-RFID.belongsTo(Kendaraan, { foreignKey: 'id_kendaraan' });
+// RFID associations removed
 
 Kendaraan.hasMany(LogParkir, { foreignKey: 'id_kendaraan' });
 LogParkir.belongsTo(Kendaraan, { foreignKey: 'id_kendaraan' });
@@ -31,7 +30,6 @@ module.exports = {
   Pengguna,
   Admin,
   Kendaraan,
-  RFID,
   SlotParkir,
   KuotaParkir,
   LogParkir

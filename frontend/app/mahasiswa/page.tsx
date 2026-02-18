@@ -1,224 +1,372 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import StatCard from "@/app/components/StatCard";
-import StatistikKendaraan from "@/app/components/statistik-kendaraan";
 import { io } from "socket.io-client";
-import { LogIn, LogOut } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
-type StatCardData = {
-  terisi: number;
-  tersedia: number;
-  kesempatan_parkir: number;
+/* ================= DATA JURUSAN ================= */
+
+const jurusanList = [
+  "Jurusan Teknik Sipil",
+  "Jurusan Teknik Mesin",
+  "Jurusan Teknik Elektro",
+  "Jurusan Teknik Geofisika",
+  "Jurusan Teknik Kimia",
+  "Jurusan Teknik Geodesi dan Geomatika",
+  "Jurusan Teknik Arsitektur",
+];
+
+const prodiByJurusan: Record<string, string[]> = {
+  "Jurusan Teknik Sipil": [
+    "Program Studi S1 Teknik Sipil",
+    "Program Studi S1 Teknik Lingkungan",
+    "Program Studi Magister Teknik Sipil",
+  ],
+  "Jurusan Teknik Mesin": [
+    "Program Studi S1 Teknik Mesin",
+    "Program Studi S1 Terapan Rekayasa Otomotif",
+    "Program Studi Magister Teknik Mesin",
+    "Program Studi Diploma 3 Teknik Mesin",
+  ],
+  "Jurusan Teknik Elektro": [
+    "Program Studi S1 Teknik Elektro",
+    "Program Studi S1 Teknik Informatika",
+    "Program Studi Magister Teknik Elektro",
+  ],
+  "Jurusan Teknik Geofisika": ["Program Studi S1 Teknik Geofisika"],
+  "Jurusan Teknik Kimia": ["Program Studi S1 Teknik Kimia"],
+  "Jurusan Teknik Geodesi dan Geomatika": [
+    "Program Studi S1 Teknik Geodesi",
+    "Program Studi Diploma 3 Teknik Survey dan Pemetaan",
+  ],
+  "Jurusan Teknik Arsitektur": [
+    "Program Studi S1 Arsitektur",
+    "Program Studi Diploma 3 Arsitek Bangunan Gedung (D3 ABG)",
+  ],
 };
 
-export default function MahasiswaHomePage() {
-  console.log("🏠 MahasiswaHomePage Component Rendered");
+export default function ProfilMahasiswaPage() {
+  const [profil, setProfil] = useState<any>(null);
+  const [previewFoto, setPreviewFoto] = useState<string | null>(null);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [loading, setLoading] = useState(true);
-  const [statcard, setStatcard] = useState<StatCardData>({
-    terisi: 0,
-    tersedia: 0,
-    kesempatan_parkir: 0,
-  });
+  /* ================= FETCH ================= */
 
-  const [actionLoading, setActionLoading] = useState(false);
   const fetchRef = useRef<any>(null);
 
-  /* ================= FETCH STATCARD ================= */
-  const fetchStatCard = useCallback(async (signal?: AbortSignal) => {
+  const fetchProfil = useCallback(async (signal?: AbortSignal) => {
+    const npm = localStorage.getItem("npm");
+    if (!npm) return;
+
     try {
-      setLoading(true);
+      const res = await fetch(`/api/users/profile?npm=${npm}`, { signal });
+      const data = await res.json();
 
-      const npm = localStorage.getItem("npm");
-      if (!npm) return;
+      if (res.ok) {
+        setProfil(data.data);
 
-      const res = await fetch(`/api/statcard/parkir?npm=${npm}`, {
-        cache: "no-store",
-        signal
-      });
-
-      const result = await res.json();
-      console.log("📥 Statcard Data Received:", result);
-
-      if (res.ok && result.success) {
-        setStatcard(result.data);
+        if (data.data?.foto) {
+          setPreviewFoto(
+            `${process.env.NEXT_PUBLIC_API_URL}/uploads/${data.data.foto}`
+          );
+        }
       }
-    } catch (error: any) {
-      if (error.name !== "AbortError") {
-        console.error("❌ Gagal mengambil statcard:", error);
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        console.error("FETCH PROFIL ERROR:", err);
       }
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchRef.current = fetchStatCard;
-  }, [fetchStatCard]);
+    fetchRef.current = fetchProfil;
+  }, [fetchProfil]);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchStatCard(controller.signal);
+    fetchProfil(controller.signal);
     return () => controller.abort();
-  }, [fetchStatCard]);
+  }, [fetchProfil]);
 
-  // Real-time Update
-  const [refreshKey, setRefreshKey] = useState(0);
+  // Socket Listener for Status Update
   useEffect(() => {
-    console.log("🔌 Initializing socket connection...");
     const socketHost = window.location.hostname === "localhost"
       ? "http://localhost:5000"
       : `http://${window.location.hostname}:5000`;
 
-    console.log("🌐 Socket Host:", socketHost);
-    const socket = io(socketHost, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
-
-    socket.on("connect", () => {
-      console.log("✅ Mahasiswa Socket Connected to:", socketHost);
-      console.log("🆔 Socket ID:", socket.id);
-    });
-
-    socket.on("disconnect", (reason) => {
-      console.warn("⚠️ Socket Disconnected:", reason);
-    });
-
-    socket.on("parking_update", (payload: any) => {
-      console.log("🚗 Mahasiswa Dashboard update:", payload);
-      // Re-fetch statcard
-      if (fetchRef.current) {
-        console.log("🔄 Fetching updated data...");
-        fetchRef.current();
-      }
-      // Re-fetch statistik kendaraan melalui refreshKey
-      setRefreshKey(prev => prev + 1);
-    });
+    const socket = io(socketHost);
 
     socket.on("user_update", (payload: any) => {
-      console.log("👥 Mahasiswa User update:", payload);
-      if (fetchRef.current) {
-        console.log("🔄 Fetching updated user data...");
-        fetchRef.current();
+      console.log("👥 Profil real-time update:", payload);
+      const myNpm = localStorage.getItem("npm");
+      if (payload.npm === myNpm || !payload.npm) {
+        if (fetchRef.current) fetchRef.current();
       }
-    });
-
-    socket.on("connect_error", (err) => {
-      console.error("❌ Mahasiswa Socket Error:", err.message);
-      console.error("🔍 Error Details:", err);
     });
 
     return () => {
-      console.log("🔌 Disconnecting socket...");
       socket.disconnect();
     };
   }, []);
 
-  const handleManualPark = async (aksi: "MASUK" | "KELUAR") => {
-    const npm = localStorage.getItem("npm");
-    if (!npm) {
-      alert("NPM tidak ditemukan, silakan login kembali.");
-      return;
-    }
+  if (!profil) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-gray-500">
+        Memuat data...
+      </div>
+    );
+  }
 
-    const confirm = window.confirm(`Konfirmasi untuk ${aksi} parkir?`);
-    if (!confirm) return;
+  /* ================= HANDLERS ================= */
 
+  const handleChange = (e: any) => {
+    const { name, value } = e.target;
+
+    setProfil((prev: any) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "jurusan" ? { prodi: "" } : {}),
+    }));
+  };
+
+  const handleFotoChange = (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setFotoFile(file);
+    setPreviewFoto(URL.createObjectURL(file));
+  };
+
+  const handleSave = async () => {
     try {
-      setActionLoading(true);
-      const res = await fetch("/api/mahasiswa/parkir/manual", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ npm, aksi }),
+      setSaving(true);
+      const formData = new FormData();
+      formData.append("npm", profil.npm);
+      formData.append("jurusan", profil.jurusan || "");
+      formData.append("prodi", profil.prodi || "");
+      formData.append("angkatan", profil.angkatan || "");
+      formData.append("plat_nomor", profil.plat_nomor || "");
+      if (fotoFile) formData.append("foto", fotoFile);
+
+      const res = await fetch("/api/users/profile", {
+        method: "PUT",
+        body: formData,
       });
 
-      const data = await res.json();
       if (res.ok) {
-        alert(data.message || `Berhasil ${aksi}`);
-        if (fetchRef.current) fetchRef.current();
-        setRefreshKey(prev => prev + 1);
+        await fetchProfil(); // Segarkan data
+        setShowToast(true);
+        // Hide toast after 3 seconds
+        setTimeout(() => setShowToast(false), 3000);
       } else {
-        alert(data.message || "Gagal melakukan aksi parkir");
+        const errorData = await res.json();
+        alert(errorData.message || "Gagal memperbarui profil");
       }
     } catch (error) {
-      console.error("MANUAL PARK ERROR:", error);
-      alert("Gagal terhubung ke server");
+      console.error("SAVE PROFIL ERROR:", error);
+      alert("Terjadi kesalahan saat menyimpan profil");
     } finally {
-      setActionLoading(false);
+      setSaving(false);
     }
   };
 
 
+  const apiBase = process.env.NEXT_PUBLIC_API_URL;
+
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
+
       {/* ================= HEADER ================= */}
-      <h2 className="text-base md:text-lg font-semibold text-gray-800">Dashboard Parkir</h2>
+      <div className="flex flex-col items-center gap-4 pb-6">
 
-      {/* ================= STATCARD ================= */}
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4">
-        <StatCard
-          title="Terisi"
-          value={statcard.terisi}
-          unit="Kendaraan"
-          loading={loading}
-        />
-        <StatCard
-          title="Tersedia"
-          value={statcard.tersedia}
-          unit="Slot"
-          loading={loading}
-        />
-        <StatCard
-          title="Kesempatan Parkir"
-          value={statcard.kesempatan_parkir}
-          unit="Kali"
-          loading={loading}
-        />
-      </section>
-
-      {/* ================= TOMBOL PARKIR MANUAL ================= */}
-      <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <span className="w-1.5 h-4 bg-[#1F3A93] rounded-full"></span>
-          Aksi Parkir Mandiri
-        </h3>
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            onClick={() => handleManualPark("MASUK")}
-            disabled={actionLoading || loading}
-            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-blue-100 bg-blue-50 text-blue-900 transition-all hover:bg-blue-100 hover:border-blue-300 active:scale-95 disabled:opacity-60"
-          >
-            <div className="p-3 bg-blue-900 text-white rounded-full shadow-lg">
-              <LogIn size={24} />
-            </div>
-            <span className="font-bold text-sm">Masuk Parkir</span>
-          </button>
-
-          <button
-            onClick={() => handleManualPark("KELUAR")}
-            disabled={actionLoading || loading}
-            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-teal-100 bg-teal-50 text-teal-900 transition-all hover:bg-teal-100 hover:border-teal-300 active:scale-95 disabled:opacity-60"
-          >
-            <div className="p-3 bg-teal-600 text-white rounded-full shadow-lg">
-              <LogOut size={24} />
-            </div>
-            <span className="font-bold text-sm">Keluar Parkir</span>
-          </button>
+        <div
+          className="rounded-full border-2 border-[#1F3A93] overflow-hidden bg-white flex-shrink-0"
+          style={{ width: '114px', height: '114px', minWidth: '114px', minHeight: '114px', maxWidth: '114px', maxHeight: '114px' }}
+        >
+          {previewFoto ? (
+            <img
+              src={previewFoto}
+              alt="Foto Profil"
+              className="object-cover"
+              style={{ width: '114px', height: '114px' }}
+            />
+          ) : (
+            <div className="h-full w-full bg-gray-200" />
+          )}
         </div>
-        <p className="mt-4 text-[11px] text-gray-500 italic text-center">
-          *Gunakan tombol ini jika Anda tidak menggunakan kartu RFID untuk masuk/keluar.
-        </p>
-      </section>
 
+        <input
+          id="uploadFoto"
+          type="file"
+          accept="image/*"
+          onChange={handleFotoChange}
+          hidden
+        />
 
-      {/* ================= GRAFIK STATISTIK ================= */}
+        <label
+          htmlFor="uploadFoto"
+          className="cursor-pointer  text-xs font-semibold text-[#1F3A93] transition"
+        >
+          Ubah Foto
+        </label>
+
+        <div
+          className={`rounded-full px-2 py-1 text-xs font-bold ${profil.status_akun === 1
+            ? "bg-green-100 text-green-700"
+            : profil.status_akun === 2
+              ? "bg-red-100 text-red-700"
+              : "bg-yellow-100 text-yellow-700"
+            }`}
+        >
+          {profil.status_akun === 1
+            ? "Akun Aktif"
+            : profil.status_akun === 2
+              ? "Akun Diblokir"
+              : "Menunggu Verifikasi"}
+        </div>
+      </div>
+
+      {/* ================= INFORMASI ================= */}
       <section>
-        <StatistikKendaraan refreshKey={refreshKey} />
+        <h3 className="text-sm font-semibold text-gray-800 border-b pb-1 mb-3">
+          Informasi Profil
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Nama Lengkap" value={profil.nama} disabled />
+          <Field label="NPM" value={profil.npm} disabled />
+
+          <Field label="Email" value={profil.email} disabled />
+          <Field label="Nomor Kendaraan" value={profil.plat_nomor} disabled />
+          <Field
+            label="Angkatan"
+            name="angkatan"
+            value={profil.angkatan || ""}
+            onChange={handleChange}
+          />
+
+          <Select
+            label="Jurusan"
+            name="jurusan"
+            value={profil.jurusan}
+            onChange={handleChange}
+            options={jurusanList}
+          />
+
+          <Select
+            label="Program Studi"
+            name="prodi"
+            value={profil.prodi}
+            onChange={handleChange}
+            options={prodiByJurusan[profil.jurusan] || []}
+            disabled={!profil.jurusan}
+          />
+        </div>
       </section>
+      {/* ================= STNK ================= */}
+      <div className="rounded-xl bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-sm font-semibold text-gray-800 border-b pb-2">
+          Lampiran STNK
+        </h2>
+        {profil.stnk ? (
+          <div className="mt-4 flex flex-col items-start gap-4">
+            <div className="relative h-40 w-64 overflow-hidden rounded-lg border border-gray-200 shadow-sm transition hover:shadow-md">
+              <img
+                src={`${apiBase}/uploads/${profil.stnk}`}
+                alt="STNK"
+                className="h-full w-full object-contain bg-gray-50"
+              />
+            </div>
+            <a
+              href={`${apiBase}/uploads/${profil.stnk}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-100 transition"
+            >
+              Buka Gambar Penuh ↗
+            </a>
+          </div>
+        ) : (
+          <p className="text-xs text-gray-400 italic">Belum ada lampiran STNK</p>
+        )}
+      </div>
+
+      {/* ================= GANTI PASSWORD ================= */}
+      <section className="mt-8 space-y-3">
+        <h3 className="text-sm font-semibold text-gray-800 border-b pb-1">
+          Ganti Kata Sandi
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field
+            label="Kata Sandi Baru"
+            type="password"
+            name="password_baru"
+          />
+          <Field
+            label="Konfirmasi Kata Sandi"
+            type="password"
+            name="konfirmasi_password"
+          />
+        </div>
+      </section>
+
+
+      {/* ================= BUTTON ================= */}
+      <div className="flex justify-end pt-4">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="rounded bg-[#1F3A93] px-5 py-2 text-xs font-semibold text-white hover:bg-[#162C6E] transition active:scale-95 disabled:opacity-50 flex items-center gap-2"
+        >
+          {saving ? "Menyimpan..." : "Simpan"}
+        </button>
+      </div>
+
+      {/* ================= TOAST NOTIFICATION ================= */}
+      {showToast && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-3 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg border border-green-500/20">
+            <CheckCircle size={18} />
+            <span className="text-sm font-semibold">Informasi profil berhasil diperbarui!</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================= FIELD ================= */
+
+function Field({ label, ...props }: any) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-medium text-gray-600">{label}</label>
+      <input
+        {...props}
+        className="w-full rounded border border-gray-300 px-3 py-1.5 text-xs bg-white disabled:bg-gray-100 disabled:text-gray-400"
+      />
+    </div>
+  );
+}
+
+function Select({ label, options, ...props }: any) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-medium text-gray-600">{label}</label>
+      <select
+        {...props}
+        className="w-full rounded border border-gray-300 px-3 py-1.5 text-xs bg-white"
+      >
+        <option value="">Pilih</option>
+        {options.map((opt: string) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

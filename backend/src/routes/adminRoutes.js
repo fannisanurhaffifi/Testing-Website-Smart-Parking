@@ -3,7 +3,6 @@ const router = express.Router();
 
 const {
   loginAdmin,
-  verifikasiPengguna,
   getDataPengguna,
   generateRFID,
   dashboardSummary,
@@ -35,8 +34,7 @@ router.post("/login", loginAdmin);
 // GET semua pengguna
 router.get("/pengguna", getDataPengguna);
 
-// VERIFIKASI / AKTIVASI AKUN (kirim email)
-router.put("/pengguna/verifikasi", verifikasiPengguna);
+
 
 // HAPUS PENGGUNA
 router.delete("/pengguna/:npm", hapusPengguna);
@@ -47,14 +45,7 @@ router.put("/kuota", updateKuotaParkir);
 // AKSI PARKIR MANUAL
 router.post("/parkir/manual", parkirManual);
 
-/**
- * ====================================================
- * RFID
- * ====================================================
- */
 
-// GENERATE RFID untuk kendaraan
-router.post("/rfid/generate", generateRFID);
 
 /**
  * ====================================================

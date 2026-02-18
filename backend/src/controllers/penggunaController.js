@@ -53,21 +53,7 @@ const registerPengguna = async (req, res) => {
       [npm, plat_nomor, stnk]
     );
 
-    const [vehicle] = await connection.query(
-      "SELECT id_kendaraan FROM kendaraan WHERE npm = ? ORDER BY id_kendaraan DESC LIMIT 1",
-      [npm]
-    );
 
-    if (vehicle.length > 0) {
-      const id_kendaraan = vehicle[0].id_kendaraan;
-      const auto_rfid = Math.random().toString(16).slice(2, 10).toUpperCase();
-
-      await connection.query(
-        "INSERT INTO rfid (id_kendaraan, kode_rfid, status_rfid, tanggal_aktif) VALUES (?, ?, 1, NOW())",
-        [id_kendaraan, auto_rfid, 1]
-      );
-      console.log(`✅ RFID ${auto_rfid} generated automatically for vehicle ID ${id_kendaraan}`);
-    }
 
     await connection.query(
       "INSERT INTO kuota_parkir (npm, batas_parkir, jumlah_terpakai) VALUES (?, 30, 0)",
@@ -195,7 +181,6 @@ const getProfilPengguna = async (req, res) => {
     const rows = await query(
       `SELECT p.npm, p.nama, p.email, p.jurusan, p.prodi, p.angkatan, p.foto, p.status_akun,
               k.id_kendaraan, k.plat_nomor, k.stnk,
-              r.kode_rfid,
               COALESCE(
                 (SELECT batas_parkir FROM kuota_parkir WHERE npm = p.npm ORDER BY id_kuota DESC LIMIT 1),
                 (SELECT batas_parkir FROM kuota_parkir WHERE npm IS NULL ORDER BY id_kuota DESC LIMIT 1), 
@@ -208,7 +193,6 @@ const getProfilPengguna = async (req, res) => {
               ) AS sisa_kuota
        FROM pengguna p
        LEFT JOIN kendaraan k ON p.npm = k.npm
-       LEFT JOIN rfid r ON k.id_kendaraan = r.id_kendaraan
        WHERE p.npm = ?`,
       [npm]
     );

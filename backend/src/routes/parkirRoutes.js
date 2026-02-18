@@ -1,10 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-const {
-  parkirScan,
-} = require("../controllers/parkirController");
-
-router.post("/scan", parkirScan);
+// Route scan otomatis dihapus karena tidak digunakan di FE
 
 module.exports = router;
