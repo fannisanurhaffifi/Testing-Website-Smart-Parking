@@ -43,7 +43,8 @@ const connectToDatabase = async () => {
 
     conn.release();
   } catch (err) {
-    console.error("❌ Database connection failed:", err.message);
+    console.error("❌ Database connection failed FULL ERROR:", err);
+
     process.exit(1);
   }
 };
