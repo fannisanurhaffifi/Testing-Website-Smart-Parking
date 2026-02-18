@@ -88,10 +88,6 @@ const registerPengguna = async (req, res) => {
 };
 
 
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const { query } = require("../config/db"); // sesuaikan path
-
 /* =====================================================
    LOGIN PENGGUNA
 ===================================================== */
@@ -191,8 +187,6 @@ const loginPengguna = async (req, res) => {
     });
   }
 };
-
-module.exports = { loginPengguna };
 
 /* =====================================================
    GET PROFIL
