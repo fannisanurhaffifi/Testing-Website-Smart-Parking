@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     if (start) params.append("start", start);
     if (end) params.append("end", end);
 
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/parkir?${params.toString()}`;
+    const backendUrl = `${process.env.BACKEND_URL}/api/admin/parkir?${params.toString()}`;
 
     // ===== fetch ke backend =====
     const res = await fetch(backendUrl, {

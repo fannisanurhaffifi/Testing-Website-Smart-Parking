@@ -4,8 +4,8 @@ require("dotenv").config();
 // 🔐 Transporter Brevo (Sendinblue) SMTP
 const transporter = nodemailer.createTransport({
     host: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com",
-    port: parseInt(process.env.BREVO_SMTP_PORT) || 587,
-    secure: false, // false untuk port 587 (STARTTLS)
+    port: parseInt(process.env.BREVO_SMTP_PORT) || 2525,
+    secure: false, // false untuk port 2525/587 (STARTTLS)
     auth: {
         user: process.env.BREVO_USER,
         pass: process.env.BREVO_PASS,
@@ -42,3 +42,4 @@ const sendOtpEmail = async (to, otp) => {
 };
 
 module.exports = { sendOtpEmail };
+

@@ -4,7 +4,6 @@ const router = express.Router();
 const {
   loginAdmin,
   getDataPengguna,
-  generateRFID,
   dashboardSummary,
   getDataParkir,
   exportParkirPDF,

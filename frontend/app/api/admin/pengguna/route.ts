@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const BE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/pengguna`;
+const BE_URL = `${process.env.BACKEND_URL}/api/admin/pengguna`;
 
 export async function GET(req: Request) {
     try {
