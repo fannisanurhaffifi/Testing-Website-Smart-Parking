@@ -7,8 +7,8 @@ const transporter = nodemailer.createTransport({
     port: parseInt(process.env.BREVO_SMTP_PORT) || 587,
     secure: false, // false untuk port 587 (STARTTLS)
     auth: {
-        user: process.env.BREVO_SMTP_USER,
-        pass: process.env.BREVO_SMTP_PASS,
+        user: process.env.BREVO_USER,
+        pass: process.env.BREVO_PASS,
     },
 });
 
