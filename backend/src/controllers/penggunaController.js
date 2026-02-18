@@ -2,6 +2,7 @@ const { query, pool } = require("../config/database");
 const { sendOtpEmail } = require("../utils/lupapswd");
 const { sendRegistrationSuccessEmail, sendRegistrationPendingEmail } = require("../utils/email");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 /* =====================================================
    REGISTER PENGGUNA
@@ -87,13 +88,18 @@ const registerPengguna = async (req, res) => {
 };
 
 
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { query } = require("../config/db"); // sesuaikan path
+
 /* =====================================================
-   LOGIN
+   LOGIN PENGGUNA
 ===================================================== */
 const loginPengguna = async (req, res) => {
   try {
     const { npm, password } = req.body;
 
+    // 🔎 Validasi input
     if (!npm || !password) {
       return res.status(400).json({
         status: "error",
@@ -101,13 +107,16 @@ const loginPengguna = async (req, res) => {
       });
     }
 
+    // 🔎 Ambil user
     const rows = await query(
       `SELECT npm, nama, email, jurusan, prodi, password, status_akun
-       FROM pengguna WHERE npm = ? LIMIT 1`,
+       FROM pengguna 
+       WHERE npm = ? 
+       LIMIT 1`,
       [npm]
     );
 
-    if (rows.length === 0) {
+    if (!rows || rows.length === 0) {
       return res.status(401).json({
         status: "error",
         message: "NPM atau password salah",
@@ -116,10 +125,12 @@ const loginPengguna = async (req, res) => {
 
     const user = rows[0];
 
-    // Cek status_akun (1 = Aktif)
+    // 🔒 Cek status akun
     if (user.status_akun !== 1) {
       let msg = "Akun belum diverifikasi admin";
-      if (user.status_akun === 2) msg = "Akun Anda telah ditangguhkan/diblokir";
+      if (user.status_akun === 2) {
+        msg = "Akun Anda telah ditangguhkan/diblokir";
+      }
 
       return res.status(403).json({
         status: "error",
@@ -127,8 +138,8 @@ const loginPengguna = async (req, res) => {
       });
     }
 
+    // 🔐 Cek password
     const match = await bcrypt.compare(password, user.password);
-
 
     if (!match) {
       return res.status(401).json({
@@ -137,23 +148,31 @@ const loginPengguna = async (req, res) => {
       });
     }
 
-    // ✅ JARING PENGAMAN: PASTIKAN USER PUNYA KUOTA SAAT LOGIN
+    // ✅ Pastikan user punya kuota
     const existingKuota = await query(
       "SELECT id_kuota FROM kuota_parkir WHERE npm = ? LIMIT 1",
       [user.npm]
     );
 
-    if (existingKuota.length === 0) {
+    if (!existingKuota || existingKuota.length === 0) {
       await query(
         "INSERT INTO kuota_parkir (npm, batas_parkir, jumlah_terpakai) VALUES (?, 30, 0)",
         [user.npm]
       );
-      console.log(`✅ Kuota awal 30 diberikan otomatis saat login untuk NPM ${user.npm}`);
+      console.log(`Kuota awal 30 diberikan untuk NPM ${user.npm}`);
     }
+
+    // 🔐 Generate JWT Token (Pastikan JWT_SECRET ada di Railway)
+    const token = jwt.sign(
+      { npm: user.npm },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
     return res.status(200).json({
       status: "success",
       message: "Login berhasil",
+      token,
       data: {
         npm: user.npm,
         nama: user.nama,
@@ -162,14 +181,18 @@ const loginPengguna = async (req, res) => {
         prodi: user.prodi,
       },
     });
+
   } catch (error) {
-    console.error("LOGIN ERROR: ", error);
+    console.error("LOGIN ERROR:", error);
+
     return res.status(500).json({
       status: "error",
       message: "Internal server error",
     });
   }
 };
+
+module.exports = { loginPengguna };
 
 /* =====================================================
    GET PROFIL
