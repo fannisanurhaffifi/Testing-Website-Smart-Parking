@@ -1,27 +1,26 @@
 require("dotenv").config();
-
 const nodemailer = require("nodemailer");
 
+// 🔐 Transporter Brevo (Sendinblue) SMTP
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com",
+    port: parseInt(process.env.BREVO_SMTP_PORT) || 587,
+    secure: false, // false untuk port 587 (STARTTLS)
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, "") : "",
+        user: process.env.BREVO_USER,
+        pass: process.env.BREVO_PASS,
     },
 });
 
 transporter.verify((error) => {
     if (error) {
-        console.error("Email transporter error:", error);
+        console.error("❌ Email transporter error:", error);
     } else {
-        console.log("Email transporter verifikasi ready");
+        console.log("✅ Email transporter (Brevo) ready");
     }
 });
 
-console.log("EMAIL:", process.env.EMAIL_USER);
-
-
-
+const FROM = `"${process.env.BREVO_FROM_NAME || "Smart Parking"}" <${process.env.BREVO_FROM_EMAIL}>`;
 
 const sendRegistrationSuccessEmail = async (toEmail, nama) => {
     try {
@@ -29,17 +28,17 @@ const sendRegistrationSuccessEmail = async (toEmail, nama) => {
             throw new Error("Email penerima tidak valid atau kosong");
         }
 
-        console.log("Mengirim email penegasan ke:", toEmail);
+        console.log("📧 Mengirim email konfirmasi ke:", toEmail);
 
         const info = await transporter.sendMail({
-            from: `"Smart Parking" <${process.env.EMAIL_USER}>`,
+            from: FROM,
             to: toEmail,
             subject: "Pendaftaran Berhasil - Akun Aktif",
             html: `
         <h3>Halo ${nama},</h3>
         <p>Selamat! Pendaftaran Anda di sistem Smart Parking telah berhasil.</p>
         <p>Akun Anda kini sudah <strong>Aktif</strong> dan dapat langsung digunakan.</p>
-        <p>Silakan login menggunakan email dan kata sandi yang telah Anda daftarkan.</p>
+        <p>Silakan login menggunakan NPM dan kata sandi yang telah Anda daftarkan.</p>
       `,
         });
 
@@ -56,10 +55,10 @@ const sendRegistrationPendingEmail = async (toEmail, nama) => {
             throw new Error("Email penerima tidak valid atau kosong");
         }
 
-        console.log("Mengirim email pendaftaran ke:", toEmail);
+        console.log("📧 Mengirim email pending ke:", toEmail);
 
         const info = await transporter.sendMail({
-            from: `"Smart Parking" <${process.env.EMAIL_USER}>`,
+            from: FROM,
             to: toEmail,
             subject: "Pendaftaran Berhasil - Menunggu Verifikasi",
             html: `
@@ -70,15 +69,13 @@ const sendRegistrationPendingEmail = async (toEmail, nama) => {
       `,
         });
 
-        console.log("✅ Email pendaftaran dikirim:", info.messageId);
+        console.log("✅ Email pending dikirim:", info.messageId);
         return info;
     } catch (error) {
-        console.error("❌ Gagal mengirim email pendaftaran:", error.message);
+        console.error("❌ Gagal mengirim email pending:", error.message);
         // Jangan throw error agar registrasi tetap sukses walaupun email gagal
     }
 };
-
-
 
 module.exports = {
     sendRegistrationSuccessEmail,
