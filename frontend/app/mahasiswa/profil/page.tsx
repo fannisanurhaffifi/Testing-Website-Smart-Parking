@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { io } from "socket.io-client";
+import { CheckCircle } from "lucide-react";
 
 /* ================= DATA JURUSAN ================= */
 
@@ -48,6 +49,8 @@ export default function ProfilMahasiswaPage() {
   const [profil, setProfil] = useState<any>(null);
   const [previewFoto, setPreviewFoto] = useState<string | null>(null);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   /* ================= FETCH ================= */
 
@@ -137,23 +140,35 @@ export default function ProfilMahasiswaPage() {
   };
 
   const handleSave = async () => {
-    const formData = new FormData();
-    formData.append("npm", profil.npm);
-    formData.append("jurusan", profil.jurusan);
-    formData.append("prodi", profil.prodi);
-    formData.append("angkatan", profil.angkatan);
-    formData.append("plat_nomor", profil.plat_nomor);
-    if (fotoFile) formData.append("foto", fotoFile);
+    try {
+      setSaving(true);
+      const formData = new FormData();
+      formData.append("npm", profil.npm);
+      formData.append("jurusan", profil.jurusan || "");
+      formData.append("prodi", profil.prodi || "");
+      formData.append("angkatan", profil.angkatan || "");
+      formData.append("plat_nomor", profil.plat_nomor || "");
+      if (fotoFile) formData.append("foto", fotoFile);
 
-    const res = await fetch("/api/users/profile", {
-      method: "PUT",
-      body: formData,
-    });
+      const res = await fetch("/api/users/profile", {
+        method: "PUT",
+        body: formData,
+      });
 
-    if (res.ok) {
-      fetchProfil(); // Segarkan data
-    } else {
-      alert("Gagal memperbarui profil");
+      if (res.ok) {
+        await fetchProfil(); // Segarkan data
+        setShowToast(true);
+        // Hide toast after 3 seconds
+        setTimeout(() => setShowToast(false), 3000);
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || "Gagal memperbarui profil");
+      }
+    } catch (error) {
+      console.error("SAVE PROFIL ERROR:", error);
+      alert("Terjadi kesalahan saat menyimpan profil");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -303,11 +318,22 @@ export default function ProfilMahasiswaPage() {
       <div className="flex justify-end pt-4">
         <button
           onClick={handleSave}
-          className="rounded bg-[#1F3A93] px-5 py-2 text-xs font-semibold text-white hover:bg-[#162C6E] transition active:scale-95"
+          disabled={saving}
+          className="rounded bg-[#1F3A93] px-5 py-2 text-xs font-semibold text-white hover:bg-[#162C6E] transition active:scale-95 disabled:opacity-50 flex items-center gap-2"
         >
-          Simpan
+          {saving ? "Menyimpan..." : "Simpan"}
         </button>
       </div>
+
+      {/* ================= TOAST NOTIFICATION ================= */}
+      {showToast && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-3 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg border border-green-500/20">
+            <CheckCircle size={18} />
+            <span className="text-sm font-semibold">Informasi profil berhasil diperbarui!</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
