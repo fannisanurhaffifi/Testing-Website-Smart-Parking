@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     if (start) params.append("start", start);
     if (end) params.append("end", end);
 
-    const backendBaseUrl = process.env.BACKEND_URL;
+    const backendBaseUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
     if (!backendBaseUrl) {
       return NextResponse.json(
         { status: "error", message: "Konfigurasi BACKEND_URL di Railway Frontend belum diisi!" },
