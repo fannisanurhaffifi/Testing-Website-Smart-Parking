@@ -106,8 +106,8 @@ const getDataPengguna = async (req, res) => {
       LEFT JOIN kendaraan k ON p.npm = k.npm
       ${whereSql}
       ORDER BY p.nama ASC
-      LIMIT ? OFFSET ?
-    `, [...params, safeLimit, safeOffset]);
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
+    `, params);
 
     console.log(`✅ [getDataPengguna] Berhasil mengambil ${rows.length} data.`);
 
@@ -286,8 +286,8 @@ const getDataParkir = async (req, res) => {
       LEFT JOIN pengguna p ON k.npm = p.npm
       ${whereSql}
       ORDER BY l.waktu_masuk DESC
-      LIMIT ? OFFSET ?
-    `, [...params, safeLimit, safeOffset]);
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
+    `, params);
 
     const formattedData = rows.map(r => {
       const masukDate = r.waktu_masuk ? new Date(r.waktu_masuk) : null;
