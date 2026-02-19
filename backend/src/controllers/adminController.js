@@ -106,9 +106,12 @@ const getDataPengguna = async (req, res) => {
       FROM pengguna p
       LEFT JOIN kendaraan k ON p.npm = k.npm
       ${whereSql}
+      GROUP BY p.npm, k.id_kendaraan
       ORDER BY p.nama ASC
       LIMIT ? OFFSET ?
     `, [...params, safeLimit, safeOffset]);
+
+    console.log(`✅ Berhasil mengambil ${rows.length} data pengguna.`);
 
     return res.status(200).json({
       status: "success",
@@ -116,10 +119,14 @@ const getDataPengguna = async (req, res) => {
       total: totalData,
     });
   } catch (err) {
-    console.error("getDataPengguna:", err);
+    console.error("🔥 ERROR getDataPengguna:", {
+      message: err.message,
+      code: err.code,
+      sql: err.sql
+    });
     return res.status(500).json({
       status: "error",
-      message: "Gagal mengambil data pengguna",
+      message: "Gagal mengambil data pengguna: " + err.message,
     });
   }
 };
