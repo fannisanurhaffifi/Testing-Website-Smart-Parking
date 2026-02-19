@@ -10,6 +10,7 @@ const {
   hapusPengguna,
   updateKuotaParkir,
   updateSlotParkir,
+  verifikasiPengguna,
 } = require("../controllers/adminController");
 
 const { parkirManual } = require("../controllers/parkirController");
@@ -32,6 +33,9 @@ router.post("/login", loginAdmin);
 
 // GET semua pengguna
 router.get("/pengguna", getDataPengguna);
+
+// VERIFIKASI / UPDATE STATUS
+router.put("/pengguna/verifikasi", verifikasiPengguna);
 
 
 

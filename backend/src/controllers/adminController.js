@@ -1,5 +1,6 @@
 const { query } = require("../config/database");
 const PDFDocument = require("pdfkit");
+const { sendAccountStatusEmail } = require("../utils/email");
 
 /* =====================================================
    LOGIN ADMIN
@@ -460,6 +461,45 @@ const updateSlotParkir = async (req, res) => {
   }
 };
 
+const verifikasiPengguna = async (req, res) => {
+  try {
+    const { npm, status_akun } = req.body;
+
+    if (!npm || status_akun === undefined) {
+      return res.status(400).json({
+        status: "error",
+        message: "NPM dan status_akun wajib diisi",
+      });
+    }
+
+    await query("UPDATE pengguna SET status_akun = ? WHERE npm = ?", [
+      status_akun,
+      npm,
+    ]);
+
+    // 📩 Kirim Email Pemberitahuan (Non-Blocking)
+    const [user] = await query("SELECT nama, email FROM pengguna WHERE npm = ?", [npm]);
+    if (user) {
+      sendAccountStatusEmail(user.email, user.nama, status_akun);
+    }
+
+    // 📡 Real-time update
+    const io = req.app.get("io");
+    if (io) io.emit("user_update", { action: "STATUS_UPDATE", npm, status_akun });
+
+    return res.status(200).json({
+      status: "success",
+      message: "Status pengguna berhasil diperbarui",
+    });
+  } catch (err) {
+    console.error("verifikasiPengguna:", err);
+    return res.status(500).json({
+      status: "error",
+      message: "Gagal memperbarui status pengguna",
+    });
+  }
+};
+
 module.exports = {
   loginAdmin,
   getDataPengguna,
@@ -469,5 +509,6 @@ module.exports = {
   exportParkirPDF,
   updateKuotaParkir,
   updateSlotParkir,
+  verifikasiPengguna,
 };
 

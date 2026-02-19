@@ -159,7 +159,6 @@ export default function DataPenggunaTable({
   const updateStatus = async (npm: string, status: number) => {
     let message = "Aktifkan hak parkir pengguna ini?";
     if (status === 2) message = "Blokir hak parkir pengguna ini?";
-    if (status === 3) message = "Tolak pendaftaran pengguna ini?";
 
     const confirm = window.confirm(message);
     if (!confirm) return;
@@ -292,14 +291,7 @@ export default function DataPenggunaTable({
             )}
 
             {users.map((user, index) => {
-              const statusLabel =
-                user.status_akun === 1
-                  ? "Aktif"
-                  : user.status_akun === 2
-                    ? "Diblokir"
-                    : user.status_akun === 3
-                      ? "Ditolak"
-                      : "Menunggu";
+              const statusLabel = user.status_akun === 1 ? "Aktif" : "Diblokir";
 
               return (
                 <tr
@@ -346,11 +338,7 @@ export default function DataPenggunaTable({
                       className={`rounded-full px-2 md:px-3 py-1 text-[10px] md:text-[11px] font-semibold whitespace-nowrap
                         ${statusLabel === "Aktif"
                           ? "bg-green-100 text-green-700"
-                          : statusLabel === "Menunggu"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : statusLabel === "Ditolak"
-                              ? "bg-gray-100 text-gray-500"
-                              : "bg-red-100 text-red-700"
+                          : "bg-red-100 text-red-700"
                         }`}
                     >
                       {statusLabel}
@@ -359,65 +347,34 @@ export default function DataPenggunaTable({
 
                   <Td>
                     <div className="flex justify-center gap-1 md:gap-2">
-                      {/* AKSI PARKIR MANUAL SUDAH DIPINDAHKAN KE DASHBOARD MAHASISWA */}
-
-
-                      {/* JIKA STATUS MENUNGGU (0) → VALIDASI (HIJAU) & TOLAK (MERAH) */}
-                      {user.status_akun === 0 ? (
-                        <>
-                          <button
-                            disabled={actionLoading}
-                            title="Validasi / Aktifkan"
-                            onClick={() => updateStatus(user.npm, 1)}
-                            className="rounded-md bg-green-600 p-1.5 text-white hover:bg-green-700 disabled:opacity-50 transition shadow-sm"
-                          >
-                            <Check size={14} />
-                          </button>
-
-                          <button
-                            disabled={actionLoading}
-                            title="Tolak Pendaftaran"
-                            onClick={() => updateStatus(user.npm, 3)}
-                            className="rounded-md bg-red-600 p-1.5 text-white hover:bg-red-700 disabled:opacity-50 transition shadow-sm"
-                          >
-                            <X size={14} />
-                          </button>
-                        </>
+                      {user.status_akun === 2 ? (
+                        <button
+                          disabled={actionLoading}
+                          title="Aktifkan"
+                          onClick={() => updateStatus(user.npm, 1)}
+                          className="rounded-md bg-green-600 p-1.5 text-white hover:bg-green-700 disabled:opacity-50 transition shadow-sm"
+                        >
+                          <Check size={14} />
+                        </button>
                       ) : (
-                        /* JIKA STATUS AKTIF (1), BLOKIR (2), ATAU DITOLAK (3) */
-                        <>
-                          {user.status_akun === 2 && (
-                            <button
-                              disabled={actionLoading}
-                              title="Aktifkan"
-                              onClick={() => updateStatus(user.npm, 1)}
-                              className="rounded-md bg-green-600 p-1.5 text-white hover:bg-green-700 disabled:opacity-50 transition shadow-sm"
-                            >
-                              <Check size={14} />
-                            </button>
-                          )}
-
-                          {user.status_akun === 1 && (
-                            <button
-                              disabled={actionLoading}
-                              title="Blokir"
-                              onClick={() => updateStatus(user.npm, 2)}
-                              className="rounded-md bg-orange-500 p-1.5 text-white hover:bg-orange-600 disabled:opacity-50 transition shadow-sm"
-                            >
-                              <Ban size={14} />
-                            </button>
-                          )}
-
-                          <button
-                            disabled={actionLoading}
-                            title="Hapus"
-                            onClick={() => deleteUser(user.npm)}
-                            className="rounded-md bg-red-600 p-1.5 text-white hover:bg-red-700 disabled:opacity-50 transition shadow-sm"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </>
+                        <button
+                          disabled={actionLoading}
+                          title="Blokir"
+                          onClick={() => updateStatus(user.npm, 2)}
+                          className="rounded-md bg-orange-500 p-1.5 text-white hover:bg-orange-600 disabled:opacity-50 transition shadow-sm"
+                        >
+                          <Ban size={14} />
+                        </button>
                       )}
+
+                      <button
+                        disabled={actionLoading}
+                        title="Hapus"
+                        onClick={() => deleteUser(user.npm)}
+                        className="rounded-md bg-red-600 p-1.5 text-white hover:bg-red-700 disabled:opacity-50 transition shadow-sm"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </Td>
                 </tr>

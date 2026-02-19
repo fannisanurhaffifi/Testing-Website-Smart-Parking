@@ -84,8 +84,34 @@ const sendOtpEmail = async (toEmail, otp) => {
     });
 };
 
+const sendAccountStatusEmail = async (toEmail, nama, status) => {
+    let subject = "Pembaruan Status Akun Smart Parking";
+    let message = "";
+
+    if (status === 1) {
+        subject = "Akun Smart Parking Anda Telah Diaktifkan";
+        message = "Selamat! Akun Anda telah diverifikasi oleh admin. Sekarang Anda sudah dapat menggunakan fasilitas parkir.";
+    } else if (status === 2) {
+        subject = "Akun Smart Parking Ditangguhkan";
+        message = "Mohon maaf, hak parkir akun Anda telah ditangguhkan sementara oleh admin. Silakan hubungi bagian teknis jika ini adalah kesalahan.";
+    } else {
+        return; // Tidak kirim email jika status tidak dikenal
+    }
+
+    return sendEmailViaAPI({
+        toEmail,
+        subject,
+        htmlContent: `
+            <h3>Halo ${nama},</h3>
+            <p>${message}</p>
+            <p>Terima kasih,<br>Tim Smart Parking</p>
+        `
+    }).catch(e => console.error("Email Status Update Error:", e.message));
+};
+
 module.exports = {
     sendRegistrationSuccessEmail,
     sendRegistrationPendingEmail,
     sendOtpEmail,
+    sendAccountStatusEmail,
 };
