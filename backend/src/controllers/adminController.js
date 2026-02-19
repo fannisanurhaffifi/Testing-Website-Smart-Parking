@@ -160,38 +160,21 @@ const hapusPengguna = async (req, res) => {
     }
     const email = userRows[0].email;
 
-    // 2. Sequential Delete (Manual Cascade)
+    // 2. Sequential Delete (Manual Cascade for non-cascading tables)
 
-    // A. Hapus Log Parkir
+    // A. Hapus Log Parkir (karena tidak ada ON DELETE CASCADE di SQL)
     await connection.query(
       "DELETE FROM log_parkir WHERE id_kendaraan IN (SELECT id_kendaraan FROM kendaraan WHERE npm = ?)",
       [trimmedNpm]
     );
 
-    // B. Hapus RFID
-    await connection.query(
-      "DELETE FROM rfid WHERE id_kendaraan IN (SELECT id_kendaraan FROM kendaraan WHERE npm = ?)",
-      [trimmedNpm]
-    );
-
-    // C. Hapus RFID Registration sessions jika ada
-    await connection.query(
-      "DELETE FROM rfid_registration_session WHERE id_kendaraan IN (SELECT id_kendaraan FROM kendaraan WHERE npm = ?)",
-      [trimmedNpm]
-    );
-
-    // D. Hapus Kendaraan
-    await connection.query("DELETE FROM kendaraan WHERE npm = ?", [trimmedNpm]);
-
-    // E. Hapus OTP (berdasarkan email)
+    // B. Hapus OTP (berdasarkan email, karena tidak ada FK)
     if (email) {
       await connection.query("DELETE FROM reset_password_otp WHERE email = ?", [email]);
     }
 
-    // F. Hapus Kuota Parkir
-    await connection.query("DELETE FROM kuota_parkir WHERE npm = ?", [trimmedNpm]);
-
-    // G. Akhirnya Hapus Pengguna Utama
+    // C. Akhirnya Hapus Pengguna Utama
+    // Ini akan otomatis menghapus 'kendaraan' dan 'kuota_parkir' karena ada ON DELETE CASCADE di SQL
     const [result] = await connection.query("DELETE FROM pengguna WHERE npm = ?", [trimmedNpm]);
 
     if (result.affectedRows === 0) {
