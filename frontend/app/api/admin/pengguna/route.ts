@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 
-const BE_URL = `${process.env.BACKEND_URL}/api/admin/pengguna`;
-
 export async function GET(req: Request) {
     try {
+        const backendBaseUrl = process.env.BACKEND_URL;
+
+        if (!backendBaseUrl) {
+            return NextResponse.json(
+                { status: "error", message: "Konfigurasi BACKEND_URL di Railway Frontend belum diisi!" },
+                { status: 500 }
+            );
+        }
+
+        const BE_URL = `${backendBaseUrl}/api/admin/pengguna`;
         const { searchParams } = new URL(req.url);
         const FULL_URL = `${BE_URL}?${searchParams.toString()}`;
 

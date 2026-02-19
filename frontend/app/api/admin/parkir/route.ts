@@ -21,7 +21,15 @@ export async function GET(req: Request) {
     if (start) params.append("start", start);
     if (end) params.append("end", end);
 
-    const backendUrl = `${process.env.BACKEND_URL}/api/admin/parkir?${params.toString()}`;
+    const backendBaseUrl = process.env.BACKEND_URL;
+    if (!backendBaseUrl) {
+      return NextResponse.json(
+        { status: "error", message: "Konfigurasi BACKEND_URL di Railway Frontend belum diisi!" },
+        { status: 500 }
+      );
+    }
+
+    const backendUrl = `${backendBaseUrl}/api/admin/parkir?${params.toString()}`;
 
     // ===== fetch ke backend =====
     const res = await fetch(backendUrl, {
