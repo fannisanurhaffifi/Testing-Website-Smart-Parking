@@ -85,17 +85,11 @@ const getDataPengguna = async (req, res) => {
     // 2️⃣ Ambil data paginasi
     const rows = await query(`
       SELECT 
-        p.npm,
-        p.nama,
-        p.email,
-        p.jurusan,
-        p.prodi,
-        p.status_akun,
-        k.plat_nomor,
-        k.stnk,
+        p.npm, p.nama, p.email, p.jurusan, p.prodi, p.status_akun,
+        k.plat_nomor, k.stnk,
         COALESCE(
-          (SELECT batas_parkir FROM kuota_parkir WHERE npm = p.npm ORDER BY id_kuota DESC LIMIT 1),
-          (SELECT batas_parkir FROM kuota_parkir WHERE npm IS NULL ORDER BY id_kuota DESC LIMIT 1), 
+          (SELECT batas_parkir FROM kuota_parkir kp WHERE kp.npm = p.npm ORDER BY kp.id_kuota DESC LIMIT 1),
+          (SELECT batas_parkir FROM kuota_parkir kp WHERE kp.npm IS NULL ORDER BY kp.id_kuota DESC LIMIT 1), 
           0
         ) - (
           SELECT COUNT(*) 
@@ -106,12 +100,11 @@ const getDataPengguna = async (req, res) => {
       FROM pengguna p
       LEFT JOIN kendaraan k ON p.npm = k.npm
       ${whereSql}
-      GROUP BY p.npm, k.id_kendaraan
-      ORDER BY p.nama ASC
+      ORDER BY p.tanggal_daftar DESC
       LIMIT ? OFFSET ?
     `, [...params, safeLimit, safeOffset]);
 
-    console.log(`✅ Berhasil mengambil ${rows.length} data pengguna.`);
+    console.log(`✅ [getDataPengguna] Berhasil mengambil ${rows.length} data. (Total: ${totalData})`);
 
     return res.status(200).json({
       status: "success",
@@ -119,14 +112,14 @@ const getDataPengguna = async (req, res) => {
       total: totalData,
     });
   } catch (err) {
-    console.error("🔥 ERROR getDataPengguna:", {
+    console.error("🔥 [getDataPengguna] CRITICAL ERROR:", {
       message: err.message,
       code: err.code,
-      sql: err.sql
+      sql: err.sql ? "Query Error" : "No SQL"
     });
     return res.status(500).json({
       status: "error",
-      message: "Gagal mengambil data pengguna: " + err.message,
+      message: "Gagal mengambil data pengguna: " + (err.message || "Internal Server Error"),
     });
   }
 };
