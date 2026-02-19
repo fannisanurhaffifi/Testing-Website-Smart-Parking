@@ -53,6 +53,7 @@ const loginAdmin = async (req, res) => {
 ===================================================== */
 const getDataPengguna = async (req, res) => {
   try {
+    console.log(`🔍 [getDataPengguna] Menggunakan Database: ${process.env.MYSQL_DATABASE}`);
     const { search, limit, offset, status } = req.query;
     const safeLimit = parseInt(limit) || 10;
     const safeOffset = parseInt(offset) || 0;
@@ -82,6 +83,10 @@ const getDataPengguna = async (req, res) => {
 
     const totalData = countResult ? countResult.total : 0;
 
+    // DEBUG: Cek total sejati di DB tanpa WHERE
+    const [totalAny] = await query("SELECT COUNT(*) as total FROM pengguna");
+    console.log(`📊 [Debug DB] Total di Tabel: ${totalAny?.total}, Total Terfilter: ${totalData}`);
+
     // 2️⃣ Ambil data paginasi
     const rows = await query(`
       SELECT 
@@ -100,11 +105,11 @@ const getDataPengguna = async (req, res) => {
       FROM pengguna p
       LEFT JOIN kendaraan k ON p.npm = k.npm
       ${whereSql}
-      ORDER BY p.tanggal_daftar DESC
+      ORDER BY p.nama ASC
       LIMIT ? OFFSET ?
     `, [...params, safeLimit, safeOffset]);
 
-    console.log(`✅ [getDataPengguna] Berhasil mengambil ${rows.length} data. (Total: ${totalData})`);
+    console.log(`✅ [getDataPengguna] Berhasil mengambil ${rows.length} data.`);
 
     return res.status(200).json({
       status: "success",
@@ -231,6 +236,7 @@ const dashboardSummary = async (req, res) => {
 ===================================================== */
 const getDataParkir = async (req, res) => {
   try {
+    console.log(`🔍 [getDataParkir] Menggunakan Database: ${process.env.MYSQL_DATABASE}`);
     const { search, start, end, limit, offset } = req.query;
     const safeLimit = parseInt(limit) || 30;
     const safeOffset = parseInt(offset) || 0;

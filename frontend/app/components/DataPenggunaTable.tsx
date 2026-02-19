@@ -42,8 +42,12 @@ export default function DataPenggunaTable({
       const params = new URLSearchParams({
         limit: String(limit),
         offset: String(offset),
-        search: search,
       });
+
+      // Proteksi agar tidak mengirim "undefined" atau string kosong
+      if (search && search.trim() !== "") {
+        params.append("search", search.trim());
+      }
 
       // Hanya tambahkan param status jika filter spesifik dipilih (bukan "semua" atau "")
       if (statusFilter && statusFilter !== "semua" && statusFilter !== "") {
