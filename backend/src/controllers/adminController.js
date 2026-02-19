@@ -1,4 +1,4 @@
-const { query } = require("../config/database");
+const { query, pool } = require("../config/database");
 const PDFDocument = require("pdfkit");
 const { sendAccountStatusEmail } = require("../utils/email");
 
@@ -137,65 +137,89 @@ const getDataPengguna = async (req, res) => {
    HAPUS PENGGUNA (CASCADE MANUAL)
 ===================================================== */
 const hapusPengguna = async (req, res) => {
+  let connection;
   try {
     const { npm } = req.params;
-
     if (!npm) {
-      return res.status(400).json({
-        status: "error",
-        message: "NPM wajib diisi",
-      });
+      return res.status(400).json({ status: "error", message: "NPM wajib diisi" });
     }
 
-    // 1. Hapus Log Parkir (Linked to Kendaraan)
-    await query(
+    const trimmedNpm = npm.trim();
+    console.log(`🗑️ ADMIN HAPUS PENGGUNA: NPM=${trimmedNpm}`);
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // 1. Ambil email untuk hapus OTP nanti (sebelum data dihapus)
+    const [userRows] = await connection.query("SELECT email FROM pengguna WHERE npm = ? LIMIT 1", [trimmedNpm]);
+
+    // Jika user tidak ada, tidak perlu lanjut
+    if (userRows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ status: "error", message: "Pengguna tidak ditemukan" });
+    }
+    const email = userRows[0].email;
+
+    // 2. Sequential Delete (Manual Cascade)
+
+    // A. Hapus Log Parkir
+    await connection.query(
       "DELETE FROM log_parkir WHERE id_kendaraan IN (SELECT id_kendaraan FROM kendaraan WHERE npm = ?)",
-      [npm]
+      [trimmedNpm]
     );
 
-    // 2. Hapus RFID (Linked to Kendaraan)
-    await query(
+    // B. Hapus RFID
+    await connection.query(
       "DELETE FROM rfid WHERE id_kendaraan IN (SELECT id_kendaraan FROM kendaraan WHERE npm = ?)",
-      [npm]
+      [trimmedNpm]
     );
 
-    // 3. Hapus Kendaraan
-    await query("DELETE FROM kendaraan WHERE npm = ?", [npm]);
+    // C. Hapus RFID Registration sessions jika ada
+    await connection.query(
+      "DELETE FROM rfid_registration_session WHERE id_kendaraan IN (SELECT id_kendaraan FROM kendaraan WHERE npm = ?)",
+      [trimmedNpm]
+    );
 
-    // 4. Hapus OTP
-    const userRows = await query("SELECT email FROM pengguna WHERE npm = ? LIMIT 1", [npm]);
-    if (userRows.length > 0 && userRows[0].email) {
-      await query("DELETE FROM reset_password_otp WHERE email = ?", [userRows[0].email]);
+    // D. Hapus Kendaraan
+    await connection.query("DELETE FROM kendaraan WHERE npm = ?", [trimmedNpm]);
+
+    // E. Hapus OTP (berdasarkan email)
+    if (email) {
+      await connection.query("DELETE FROM reset_password_otp WHERE email = ?", [email]);
     }
 
-    // 5. Hapus Kuota Parkir Khusus
-    await query("DELETE FROM kuota_parkir WHERE npm = ?", [npm]);
+    // F. Hapus Kuota Parkir
+    await connection.query("DELETE FROM kuota_parkir WHERE npm = ?", [trimmedNpm]);
 
-    // 6. Akhirnya Hapus Pengguna
-    const result = await query("DELETE FROM pengguna WHERE npm = ?", [npm]);
+    // G. Akhirnya Hapus Pengguna Utama
+    const [result] = await connection.query("DELETE FROM pengguna WHERE npm = ?", [trimmedNpm]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({
-        status: "error",
-        message: "Pengguna tidak ditemukan",
-      });
+      await connection.rollback();
+      return res.status(404).json({ status: "error", message: "Gagal menghapus data pengguna utama" });
     }
 
-    // 📡 Real-time update untuk Admin
+    await connection.commit();
+    console.log(`✅ Success: NPM ${trimmedNpm} deleted.`);
+
+    // 📡 Real-time update
     const io = req.app.get("io");
-    if (io) io.emit("user_update", { action: "DELETE", npm });
+    if (io) io.emit("user_update", { action: "DELETE", npm: trimmedNpm });
 
     return res.status(200).json({
       status: "success",
-      message: "Pengguna dan data terkait berhasil dihapus",
+      message: `Pengguna ${trimmedNpm} dan seluruh data terkaitnya berhasil dihapus`,
     });
 
   } catch (err) {
-    console.error("hapusPengguna:", err);
+    if (connection) await connection.rollback();
+    console.error("🔥 hapusPengguna CRITICAL ERROR:", err);
     return res.status(500).json({
       status: "error",
-      message: "Gagal menghapus pengguna",
+      message: "Gagal menghapus pengguna: " + (err.message || "Internal server error"),
     });
+  } finally {
+    if (connection) connection.release();
   }
 };
 
