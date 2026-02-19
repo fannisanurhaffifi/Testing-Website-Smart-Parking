@@ -1,6 +1,9 @@
 const { query, pool } = require("../config/database");
-const { sendOtpEmail } = require("../utils/lupapswd");
-const { sendRegistrationSuccessEmail, sendRegistrationPendingEmail } = require("../utils/email");
+const {
+  sendRegistrationSuccessEmail,
+  sendRegistrationPendingEmail,
+  sendOtpEmail
+} = require("../utils/email");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 

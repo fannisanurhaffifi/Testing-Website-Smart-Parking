@@ -46,6 +46,7 @@ const sendRegistrationSuccessEmail = async (toEmail, nama) => {
         return info;
     } catch (error) {
         console.error("❌ Gagal mengirim email sukses:", error.message);
+        throw error;
     }
 };
 
@@ -73,11 +74,40 @@ const sendRegistrationPendingEmail = async (toEmail, nama) => {
         return info;
     } catch (error) {
         console.error("❌ Gagal mengirim email pending:", error.message);
-        // Jangan throw error agar registrasi tetap sukses walaupun email gagal
+    }
+};
+
+const sendOtpEmail = async (to, otp) => {
+    try {
+        if (!to || to.trim() === "") {
+            throw new Error("Email penerima tidak valid atau kosong");
+        }
+
+        console.log("📧 Mengirim OTP ke:", to);
+
+        const info = await transporter.sendMail({
+            from: FROM,
+            to: to,
+            subject: "Kode OTP Reset Password",
+            html: `
+        <h3>Reset Password Smart Parking</h3>
+        <p>Kode OTP Anda adalah:</p>
+        <h2 style="letter-spacing: 4px;">${otp}</h2>
+        <p>Berlaku selama <strong>5 menit</strong>.</p>
+        <p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
+      `,
+        });
+
+        console.log("✅ OTP berhasil dikirim ke:", to);
+        return info;
+    } catch (error) {
+        console.error("❌ Gagal kirim OTP:", error.message);
+        throw error;
     }
 };
 
 module.exports = {
     sendRegistrationSuccessEmail,
     sendRegistrationPendingEmail,
+    sendOtpEmail,
 };
