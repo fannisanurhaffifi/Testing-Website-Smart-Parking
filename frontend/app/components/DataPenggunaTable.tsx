@@ -25,6 +25,7 @@ export default function DataPenggunaTable({
 }: Props) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Pagination State
@@ -70,11 +71,13 @@ export default function DataPenggunaTable({
       } else {
         setUsers([]);
         setTotalData(0);
+        setError(json.message || "Gagal mengambil data dari server");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("FETCH USERS ERROR:", err);
       setUsers([]);
       setTotalData(0);
+      setError("Terjadi kesalahan jaringan atau server");
     } finally {
       setLoading(false);
     }
@@ -220,6 +223,20 @@ export default function DataPenggunaTable({
       <p className="text-xs text-gray-500">
         Memuat data pengguna...
       </p>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl bg-red-50 p-4 border border-red-200">
+        <p className="text-sm text-red-600 font-medium">⚠️ Error: {error}</p>
+        <button
+          onClick={() => fetchUsers()}
+          className="mt-2 text-xs font-bold text-red-700 underline hover:no-underline"
+        >
+          Coba Lagi
+        </button>
+      </div>
     );
   }
 
