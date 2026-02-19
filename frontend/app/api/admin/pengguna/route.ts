@@ -15,10 +15,13 @@ export async function GET(req: Request) {
 
         const data = await res.json();
         return NextResponse.json(data, { status: res.status });
-    } catch (error) {
+    } catch (error: any) {
         console.error("FE API GET pengguna error:", error);
         return NextResponse.json(
-            { status: "error", message: "Gagal mengambil data pengguna" },
+            {
+                status: "error",
+                message: `FE Proxy Error: ${error.message}`
+            },
             { status: 500 }
         );
     }
