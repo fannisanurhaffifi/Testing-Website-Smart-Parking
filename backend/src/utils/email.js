@@ -1,7 +1,14 @@
 require("dotenv").config();
 const nodemailer = require("nodemailer");
 
-// 🔐 Transporter Brevo (Sendinblue) SMTP
+// � Debug: Pastikan ENV terbaca di server (Log akan muncul di dashboard hosting)
+console.log("📧 Inisialisasi Email Transporter...");
+console.log("- Host:", process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com");
+console.log("- Port:", process.env.BREVO_SMTP_PORT || 2525);
+console.log("- User:", process.env.BREVO_USER ? "✅ Terisi" : "❌ Kosong (Cek Dashboard Hosting)");
+console.log("- Pass:", process.env.BREVO_PASS ? "✅ Terisi" : "❌ Kosong (Cek Dashboard Hosting)");
+
+// �🔐 Transporter Brevo (Sendinblue) SMTP
 const transporter = nodemailer.createTransport({
     host: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com",
     port: parseInt(process.env.BREVO_SMTP_PORT) || 2525,
@@ -10,11 +17,16 @@ const transporter = nodemailer.createTransport({
         user: process.env.BREVO_USER,
         pass: process.env.BREVO_PASS,
     },
+    // Tambahkan timeout lebih lama untuk koneksi yang lambat/terbatasi
+    connectionTimeout: 10000, // 10 detik
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
 });
 
 transporter.verify((error) => {
     if (error) {
-        console.error("❌ Email transporter error:", error);
+        console.error("❌ Email transporter error:", error.message);
+        console.error("💡 Tips: Cek apakah Port diblokir atau variabel env benar.");
     } else {
         console.log("✅ Email transporter (Brevo) ready");
     }
