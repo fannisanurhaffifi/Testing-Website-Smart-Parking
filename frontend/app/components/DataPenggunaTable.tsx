@@ -172,11 +172,14 @@ export default function DataPenggunaTable({
         body: JSON.stringify({ npm, status_akun: status }),
       });
 
-      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal dari server");
 
       await fetchUsers();
-    } catch {
-      alert("Gagal memperbarui status pengguna");
+      alert(data.message || "Status berhasil diperbarui");
+    } catch (error: any) {
+      console.error("STATUS UPDATE ERROR:", error);
+      alert(error.message || "Gagal memperbarui status pengguna");
     } finally {
       setActionLoading(false);
     }
@@ -347,10 +350,10 @@ export default function DataPenggunaTable({
 
                   <Td>
                     <div className="flex justify-center gap-1 md:gap-2">
-                      {user.status_akun === 2 ? (
+                      {user.status_akun !== 1 ? (
                         <button
                           disabled={actionLoading}
-                          title="Aktifkan"
+                          title="Aktifkan Akun"
                           onClick={() => updateStatus(user.npm, 1)}
                           className="rounded-md bg-green-600 p-1.5 text-white hover:bg-green-700 disabled:opacity-50 transition shadow-sm"
                         >
@@ -359,7 +362,7 @@ export default function DataPenggunaTable({
                       ) : (
                         <button
                           disabled={actionLoading}
-                          title="Blokir"
+                          title="Blokir Akun"
                           onClick={() => updateStatus(user.npm, 2)}
                           className="rounded-md bg-orange-500 p-1.5 text-white hover:bg-orange-600 disabled:opacity-50 transition shadow-sm"
                         >

@@ -14,6 +14,8 @@ export async function PUT(req: Request) {
         const body = await req.json();
         const BE_URL = `${backendBaseUrl}/api/admin/pengguna/verifikasi`;
 
+        console.log("🚀 FE Proxy Sending PUT to:", BE_URL, "Body:", body);
+
         const res = await fetch(BE_URL, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -21,6 +23,8 @@ export async function PUT(req: Request) {
         });
 
         const data = await res.json();
+        console.log("📥 FE Proxy Received Response:", { status: res.status, data });
+
         return NextResponse.json(data, { status: res.status });
     } catch (error: any) {
         console.error("FE API PUT verifikasi pengguna error:", error);

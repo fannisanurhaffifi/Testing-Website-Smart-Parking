@@ -464,6 +464,7 @@ const updateSlotParkir = async (req, res) => {
 const verifikasiPengguna = async (req, res) => {
   try {
     const { npm, status_akun } = req.body;
+    console.log("📥 [verifikasiPengguna] Request:", { npm, status_akun });
 
     if (!npm || status_akun === undefined) {
       return res.status(400).json({
@@ -472,13 +473,17 @@ const verifikasiPengguna = async (req, res) => {
       });
     }
 
-    await query("UPDATE pengguna SET status_akun = ? WHERE npm = ?", [
+    const result = await query("UPDATE pengguna SET status_akun = ? WHERE npm = ?", [
       status_akun,
       npm,
     ]);
+    console.log("📝 [verifikasiPengguna] Update Result:", result);
 
     // 📩 Kirim Email Pemberitahuan (Non-Blocking)
-    const [user] = await query("SELECT nama, email FROM pengguna WHERE npm = ?", [npm]);
+    const rows = await query("SELECT nama, email FROM pengguna WHERE npm = ?", [npm]);
+    console.log("👤 [verifikasiPengguna] User Data for Email:", rows);
+
+    const user = rows[0];
     if (user) {
       sendAccountStatusEmail(user.email, user.nama, status_akun);
     }
@@ -492,10 +497,10 @@ const verifikasiPengguna = async (req, res) => {
       message: "Status pengguna berhasil diperbarui",
     });
   } catch (err) {
-    console.error("verifikasiPengguna:", err);
+    console.error("🔥 [verifikasiPengguna] CRITICAL ERROR:", err);
     return res.status(500).json({
       status: "error",
-      message: "Gagal memperbarui status pengguna",
+      message: "Gagal memperbarui status pengguna: " + err.message,
     });
   }
 };
