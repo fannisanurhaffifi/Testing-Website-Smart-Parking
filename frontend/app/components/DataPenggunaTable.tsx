@@ -186,11 +186,6 @@ export default function DataPenggunaTable({
   };
 
   const deleteUser = async (npm: string) => {
-    const confirm = window.confirm(
-      "Hapus pengguna ini? Data tidak bisa dikembalikan."
-    );
-    if (!confirm) return;
-
     try {
       setActionLoading(true);
 
@@ -198,11 +193,16 @@ export default function DataPenggunaTable({
         method: "DELETE",
       });
 
-      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Gagal menghapus pengguna");
+      }
 
+      alert(data.message || "Pengguna berhasil dihapus");
       await fetchUsers();
-    } catch {
-      alert("Gagal menghapus pengguna");
+    } catch (error: any) {
+      console.error("DELETE USER ERROR:", error);
+      alert(error.message || "Gagal menghapus pengguna");
     } finally {
       setActionLoading(false);
     }
@@ -372,8 +372,11 @@ export default function DataPenggunaTable({
 
                       <button
                         disabled={actionLoading}
-                        title="Hapus"
-                        onClick={() => deleteUser(user.npm)}
+                        title="Hapus Pengguna"
+                        onClick={() => {
+                          const confirmDelete = window.confirm(`Apakah Anda yakin ingin menghapus pengguna ${user.nama} (${user.npm})? Semua data terkait (kendaraan, parkir) akan hilang!`);
+                          if (confirmDelete) deleteUser(user.npm);
+                        }}
                         className="rounded-md bg-red-600 p-1.5 text-white hover:bg-red-700 disabled:opacity-50 transition shadow-sm"
                       >
                         <Trash2 size={14} />

@@ -162,10 +162,16 @@ const hapusPengguna = async (req, res) => {
     // 3. Hapus Kendaraan
     await query("DELETE FROM kendaraan WHERE npm = ?", [npm]);
 
-    // 4. Hapus Kuota Parkir Khusus
+    // 4. Hapus OTP
+    const userRows = await query("SELECT email FROM pengguna WHERE npm = ? LIMIT 1", [npm]);
+    if (userRows.length > 0 && userRows[0].email) {
+      await query("DELETE FROM reset_password_otp WHERE email = ?", [userRows[0].email]);
+    }
+
+    // 5. Hapus Kuota Parkir Khusus
     await query("DELETE FROM kuota_parkir WHERE npm = ?", [npm]);
 
-    // 5. Akhirnya Hapus Pengguna
+    // 6. Akhirnya Hapus Pengguna
     const result = await query("DELETE FROM pengguna WHERE npm = ?", [npm]);
 
     if (result.affectedRows === 0) {
