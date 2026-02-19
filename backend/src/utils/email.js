@@ -2,8 +2,8 @@ require("dotenv").config();
 
 // 🔍 Debug: Pastikan API Key terbaca
 console.log("📧 Menggunakan Brevo API Mode...");
-const BREVO_API_KEY = process.env.BREVO_PASS; // Kita gunakan variabel yang sama
-console.log("- API Key:", BREVO_API_KEY ? "✅ Terisi" : "❌ Kosong");
+const BREVO_API_KEY = process.env.BREVO_PASS ? process.env.BREVO_PASS.trim() : null;
+console.log("- API Key:", BREVO_API_KEY ? "✅ Terisi (Sudah di-trim)" : "❌ Kosong");
 
 /**
  * Fungsi Inti Kirim Email via Brevo API (HTTP)
