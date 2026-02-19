@@ -45,8 +45,8 @@ export default function DataPenggunaTable({
         search: search,
       });
 
-      // Convert status text to number for backend
-      if (statusFilter) {
+      // Hanya tambahkan param status jika filter spesifik dipilih (bukan "semua" atau "")
+      if (statusFilter && statusFilter !== "semua" && statusFilter !== "") {
         const val =
           statusFilter === "aktif" ? "1" :
             statusFilter === "diblokir" ? "2" :
