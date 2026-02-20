@@ -324,7 +324,7 @@ export default function DataPenggunaTable({
                   <Td>
                     {user.stnk ? (
                       <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${user.stnk}`}
+                        href={user.stnk.startsWith("http") ? user.stnk : `${process.env.NEXT_PUBLIC_API_URL}/uploads/${user.stnk}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[10px] font-bold text-blue-600 hover:underline px-2 py-1 bg-blue-50 rounded"

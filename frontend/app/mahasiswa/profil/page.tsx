@@ -68,9 +68,10 @@ export default function ProfilMahasiswaPage() {
         setProfil(data.data);
 
         if (data.data?.foto) {
-          setPreviewFoto(
-            `${process.env.NEXT_PUBLIC_API_URL}/uploads/${data.data.foto}`
-          );
+          const fotoUrl = data.data.foto.startsWith("http")
+            ? data.data.foto
+            : `${process.env.NEXT_PUBLIC_API_URL}/uploads/${data.data.foto}`;
+          setPreviewFoto(fotoUrl);
         }
       }
     } catch (err: any) {
@@ -274,13 +275,13 @@ export default function ProfilMahasiswaPage() {
           <div className="mt-4 flex flex-col items-start gap-4">
             <div className="relative h-40 w-64 overflow-hidden rounded-lg border border-gray-200 shadow-sm transition hover:shadow-md">
               <img
-                src={`${apiBase}/uploads/${profil.stnk}`}
+                src={profil.stnk.startsWith("http") ? profil.stnk : `${apiBase}/uploads/${profil.stnk}`}
                 alt="STNK"
                 className="h-full w-full object-contain bg-gray-50"
               />
             </div>
             <a
-              href={`${apiBase}/uploads/${profil.stnk}`}
+              href={profil.stnk.startsWith("http") ? profil.stnk : `${apiBase}/uploads/${profil.stnk}`}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-100 transition"

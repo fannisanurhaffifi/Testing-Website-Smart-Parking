@@ -15,7 +15,7 @@ const registerPengguna = async (req, res) => {
 
   try {
     const { npm, nama, email, jurusan, prodi, password, plat_nomor } = req.body;
-    const stnk = req.file ? req.file.filename : null;
+    const stnk = req.file ? req.file.path : null;
 
     console.log("📥 REGISTER REQUEST:", { npm, nama, email });
 
@@ -247,8 +247,8 @@ const editProfilPengguna = async (req, res) => {
     const { npm, jurusan, prodi, plat_nomor, angkatan } = req.body;
 
     // Ambil file jika ada (menggunakan upload.fields)
-    const foto = req.files?.["foto"] ? req.files["foto"][0].filename : null;
-    const stnk = req.files?.["stnk"] ? req.files["stnk"][0].filename : null;
+    const foto = req.files?.["foto"] ? req.files["foto"][0].path : null;
+    const stnk = req.files?.["stnk"] ? req.files["stnk"][0].path : null;
 
     if (!npm) {
       return res.status(400).json({

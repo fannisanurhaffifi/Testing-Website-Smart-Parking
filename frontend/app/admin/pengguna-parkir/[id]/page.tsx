@@ -331,7 +331,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
             <div className="h-32 w-32 md:h-32 md:w-32 overflow-hidden rounded-full border-2 border-[#1F3A93] bg-gray-100 flex-shrink-0 shadow-sm">
               {profil.foto ? (
                 <img
-                  src={`${apiBase}/uploads/${profil.foto}`}
+                  src={profil.foto.startsWith("http") ? profil.foto : `${apiBase}/uploads/${profil.foto}`}
                   alt="Foto Profil"
                   className="h-full w-full object-cover"
                 />
@@ -442,13 +442,13 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
             <div className="flex flex-col items-start gap-4">
               <div className="relative h-48 w-full sm:w-80 overflow-hidden rounded-lg border border-gray-200 shadow-sm bg-gray-50">
                 <img
-                  src={`${apiBase}/uploads/${profil.stnk}`}
+                  src={profil.stnk.startsWith("http") ? profil.stnk : `${apiBase}/uploads/${profil.stnk}`}
                   alt="STNK"
                   className="h-full w-full object-contain"
                 />
               </div>
               <a
-                href={`${apiBase}/uploads/${profil.stnk}`}
+                href={profil.stnk.startsWith("http") ? profil.stnk : `${apiBase}/uploads/${profil.stnk}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-100 transition"
