@@ -140,7 +140,7 @@ export default function MahasiswaHomePage() {
 
       const data = await res.json();
       if (res.ok) {
-        alert(data.message || `Berhasil ${aksi}`);
+        // Hilangkan alert sukses agar hanya ada satu kali konfirmasi di awal
         if (fetchRef.current) fetchRef.current();
         setRefreshKey(prev => prev + 1);
       } else {
@@ -193,8 +193,8 @@ export default function MahasiswaHomePage() {
             onClick={() => handleManualPark("MASUK")}
             disabled={actionLoading || loading || statcard.is_parked}
             className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed transition-all active:scale-95 disabled:opacity-40 disabled:grayscale ${statcard.is_parked
-                ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
-                : "border-blue-100 bg-blue-50 text-blue-900 hover:bg-blue-100 hover:border-blue-300"
+              ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
+              : "border-blue-100 bg-blue-50 text-blue-900 hover:bg-blue-100 hover:border-blue-300"
               }`}
           >
             <div className={`p-3 text-white rounded-full shadow-lg ${statcard.is_parked ? "bg-gray-400" : "bg-blue-900"}`}>
@@ -207,8 +207,8 @@ export default function MahasiswaHomePage() {
             onClick={() => handleManualPark("KELUAR")}
             disabled={actionLoading || loading || !statcard.is_parked}
             className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed transition-all active:scale-95 disabled:opacity-40 disabled:grayscale ${!statcard.is_parked
-                ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
-                : "border-teal-100 bg-teal-50 text-teal-900 hover:bg-teal-100 hover:border-teal-300"
+              ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
+              : "border-teal-100 bg-teal-50 text-teal-900 hover:bg-teal-100 hover:border-teal-300"
               }`}
           >
             <div className={`p-3 text-white rounded-full shadow-lg ${!statcard.is_parked ? "bg-gray-400" : "bg-teal-600"}`}>
