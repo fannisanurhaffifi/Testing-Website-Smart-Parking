@@ -203,8 +203,9 @@ export default function StatistikKendaraan({
                 },
                 y: {
                   beginAtZero: true,
-                  suggestedMax: 5, // Lebih dinamis untuk data kecil
+                  suggestedMax: 100,
                   ticks: {
+                    stepSize: 10, // Satuan puluhan
                     precision: 0,
                   },
                   title: {
