@@ -54,8 +54,20 @@ const getStatCardParkir = async (req, res) => {
       kesempatan_parkir = parseInt(globalKuota[0]?.batas_parkir || 0);
     }
 
+    // ===== STATUS PARKIR USER (APAKAH SEDANG PARKIR?) =====
+    let is_parked = false;
+    if (npm) {
+      const userParkedRows = await db.query(`
+        SELECT id_log FROM log_parkir l
+        JOIN kendaraan k ON l.id_kendaraan = k.id_kendaraan
+        WHERE k.npm = ? AND l.status_parkir = 'MASUK' AND l.waktu_keluar IS NULL
+        LIMIT 1
+      `, [npm]);
+      is_parked = userParkedRows.length > 0;
+    }
+
     console.log(`📊 StatCard request for NPM: ${npm || "Global"}`);
-    console.log(`✅ Result: Terisi=${terisi}, Tersedia=${tersedia}, Kesempatan=${kesempatan_parkir}`);
+    console.log(`✅ Result: Terisi=${terisi}, Tersedia=${tersedia}, Kesempatan=${kesempatan_parkir}, IsParked=${is_parked}`);
 
     // ===== RESPONSE =====
     res.json({
@@ -64,6 +76,7 @@ const getStatCardParkir = async (req, res) => {
         terisi,
         tersedia,
         kesempatan_parkir,
+        is_parked,
       },
     });
   } catch (error) {

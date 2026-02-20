@@ -10,6 +10,7 @@ type StatCardData = {
   terisi: number;
   tersedia: number;
   kesempatan_parkir: number;
+  is_parked: boolean;
 };
 
 export default function MahasiswaHomePage() {
@@ -20,6 +21,7 @@ export default function MahasiswaHomePage() {
     terisi: 0,
     tersedia: 0,
     kesempatan_parkir: 0,
+    is_parked: false,
   });
 
   const [actionLoading, setActionLoading] = useState(false);
@@ -189,10 +191,13 @@ export default function MahasiswaHomePage() {
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => handleManualPark("MASUK")}
-            disabled={actionLoading || loading}
-            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-blue-100 bg-blue-50 text-blue-900 transition-all hover:bg-blue-100 hover:border-blue-300 active:scale-95 disabled:opacity-60"
+            disabled={actionLoading || loading || statcard.is_parked}
+            className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed transition-all active:scale-95 disabled:opacity-40 disabled:grayscale ${statcard.is_parked
+                ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
+                : "border-blue-100 bg-blue-50 text-blue-900 hover:bg-blue-100 hover:border-blue-300"
+              }`}
           >
-            <div className="p-3 bg-blue-900 text-white rounded-full shadow-lg">
+            <div className={`p-3 text-white rounded-full shadow-lg ${statcard.is_parked ? "bg-gray-400" : "bg-blue-900"}`}>
               <LogIn size={24} />
             </div>
             <span className="font-bold text-sm">Masuk Parkir</span>
@@ -200,10 +205,13 @@ export default function MahasiswaHomePage() {
 
           <button
             onClick={() => handleManualPark("KELUAR")}
-            disabled={actionLoading || loading}
-            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-teal-100 bg-teal-50 text-teal-900 transition-all hover:bg-teal-100 hover:border-teal-300 active:scale-95 disabled:opacity-60"
+            disabled={actionLoading || loading || !statcard.is_parked}
+            className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed transition-all active:scale-95 disabled:opacity-40 disabled:grayscale ${!statcard.is_parked
+                ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
+                : "border-teal-100 bg-teal-50 text-teal-900 hover:bg-teal-100 hover:border-teal-300"
+              }`}
           >
-            <div className="p-3 bg-teal-600 text-white rounded-full shadow-lg">
+            <div className={`p-3 text-white rounded-full shadow-lg ${!statcard.is_parked ? "bg-gray-400" : "bg-teal-600"}`}>
               <LogOut size={24} />
             </div>
             <span className="font-bold text-sm">Keluar Parkir</span>
