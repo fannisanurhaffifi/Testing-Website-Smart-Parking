@@ -13,13 +13,14 @@ const getStatistikByPeriode = async (periode, from, to, specificDate) => {
 
   if (periode === "harian") {
     // 📅 Data Harian (00.00 - 23.59)
-    const targetDate = specificDate || new Date().toISOString().split('T')[0];
+    const targetDate = specificDate || new Date().toLocaleDateString('en-CA');
     query = `
       SELECT 
-        HOUR(waktu_masuk) AS hour_val,
+        HOUR(DATE_ADD(waktu_masuk, INTERVAL 7 HOUR)) AS hour_val,
         COUNT(*) AS total
       FROM log_parkir
-      WHERE waktu_masuk >= ? AND waktu_masuk <= ?
+      WHERE waktu_masuk >= DATE_SUB(?, INTERVAL 7 HOUR) 
+        AND waktu_masuk <= DATE_SUB(?, INTERVAL 7 HOUR)
       GROUP BY hour_val
     `;
     params.push(`${targetDate} 00:00:00`, `${targetDate} 23:59:59`);
@@ -32,20 +33,21 @@ const getStatistikByPeriode = async (periode, from, to, specificDate) => {
     if (from && to) {
       query = `
         SELECT 
-          DAYOFWEEK(waktu_masuk) AS day_val,
+          DAYOFWEEK(DATE_ADD(waktu_masuk, INTERVAL 7 HOUR)) AS day_val,
           COUNT(*) AS total
         FROM log_parkir
-        WHERE waktu_masuk >= ? AND waktu_masuk <= ?
+        WHERE waktu_masuk >= DATE_SUB(?, INTERVAL 7 HOUR) 
+          AND waktu_masuk <= DATE_SUB(?, INTERVAL 7 HOUR)
         GROUP BY day_val
       `;
       params.push(`${from} 00:00:00`, `${to} 23:59:59`);
     } else {
       query = `
         SELECT 
-          DAYOFWEEK(waktu_masuk) AS day_val,
+          DAYOFWEEK(DATE_ADD(waktu_masuk, INTERVAL 7 HOUR)) AS day_val,
           COUNT(*) AS total
         FROM log_parkir
-        WHERE YEARWEEK(waktu_masuk, 1) = YEARWEEK(CURDATE(), 1)
+        WHERE YEARWEEK(DATE_ADD(waktu_masuk, INTERVAL 7 HOUR), 1) = YEARWEEK(DATE_ADD(CURDATE(), INTERVAL 7 HOUR), 1)
         GROUP BY day_val
       `;
     }
@@ -59,10 +61,11 @@ const getStatistikByPeriode = async (periode, from, to, specificDate) => {
     const targetYear = specificDate ? specificDate.split('-')[0] : new Date().getFullYear();
     query = `
       SELECT 
-        MONTH(waktu_masuk) AS month_val,
+        MONTH(DATE_ADD(waktu_masuk, INTERVAL 7 HOUR)) AS month_val,
         COUNT(*) AS total
       FROM log_parkir
-      WHERE waktu_masuk >= ? AND waktu_masuk <= ?
+      WHERE waktu_masuk >= DATE_SUB(?, INTERVAL 7 HOUR) 
+        AND waktu_masuk <= DATE_SUB(?, INTERVAL 7 HOUR)
       GROUP BY month_val
     `;
     params.push(`${targetYear}-01-01 00:00:00`, `${targetYear}-12-31 23:59:59`);
