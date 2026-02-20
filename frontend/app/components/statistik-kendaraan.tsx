@@ -28,11 +28,28 @@ export default function StatistikKendaraan({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [filterDate, setFilterDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
-  const [fromDate, setFromDate] = useState<string>("");
-  const [toDate, setToDate] = useState<string>("");
+  const getLocalDate = () => {
+    const today = new Date();
+    const offset = today.getTimezoneOffset();
+    const localDate = new Date(today.getTime() - offset * 60 * 1000);
+    return localDate.toISOString().split("T")[0];
+  };
+
+  const [filterDate, setFilterDate] = useState<string>(getLocalDate());
+  const [fromDate, setFromDate] = useState<string>(() => {
+    const now = new Date();
+    const day = now.getDay(); // 0 (Sun) - 6 (Sat)
+    const diff = now.getDate() - (day === 0 ? 6 : day - 1); // Adjust to Monday
+    const monday = new Date(now.setDate(diff));
+    return monday.toISOString().split("T")[0];
+  });
+  const [toDate, setToDate] = useState<string>(() => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() + (day === 0 ? 0 : 7 - day); // Adjust to Sunday
+    const sunday = new Date(now.setDate(diff));
+    return sunday.toISOString().split("T")[0];
+  });
 
   /* ================= FETCH DATA ================= */
   useEffect(() => {

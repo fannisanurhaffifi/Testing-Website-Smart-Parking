@@ -21,8 +21,13 @@ export async function GET(req: Request) {
     }
 
     // ✅ FETCH KE BACKEND EXPRESS (AMBIL DATA DB)
+    const backendUrl = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/statistik/kendaraan`);
+    searchParams.forEach((value, key) => {
+      backendUrl.searchParams.append(key, value);
+    });
+
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/statistik/kendaraan?periode=${periode}`,
+      backendUrl.toString(),
       {
         method: "GET",
         cache: "no-store", // WAJIB: biar data selalu update
