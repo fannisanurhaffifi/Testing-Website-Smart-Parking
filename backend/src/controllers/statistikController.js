@@ -12,32 +12,33 @@ const getStatistikByPeriode = async (periode, from, to, specificDate) => {
   let displayLabels = [];
 
   if (periode === "harian") {
-    // 📅 Data Harian (00.00 - 23.00)
+    // 📅 Data Harian (00.00 - 23.59)
+    const targetDate = specificDate || new Date().toISOString().split('T')[0];
     query = `
       SELECT 
         HOUR(waktu_masuk) AS hour_val,
         COUNT(*) AS total
       FROM log_parkir
-      WHERE DATE(waktu_masuk) = ${specificDate ? "?" : "CURDATE()"}
+      WHERE waktu_masuk >= ? AND waktu_masuk <= ?
       GROUP BY hour_val
     `;
-    if (specificDate) params.push(specificDate);
+    params.push(`${targetDate} 00:00:00`, `${targetDate} 23:59:59`);
     labels = Array.from({ length: 24 }, (_, i) => i);
     displayLabels = labels.map(h => `${String(h).padStart(2, '0')}.00`);
   }
 
   if (periode === "mingguan") {
-    // 📅 MINGGU INI (Senin - Minggu)
+    // 📅 MINGGUAN (Range filter atau Minggu Ini)
     if (from && to) {
       query = `
         SELECT 
           DAYOFWEEK(waktu_masuk) AS day_val,
           COUNT(*) AS total
         FROM log_parkir
-        WHERE DATE(waktu_masuk) BETWEEN ? AND ?
+        WHERE waktu_masuk >= ? AND waktu_masuk <= ?
         GROUP BY day_val
       `;
-      params.push(from, to);
+      params.push(`${from} 00:00:00`, `${to} 23:59:59`);
     } else {
       query = `
         SELECT 
@@ -54,35 +55,49 @@ const getStatistikByPeriode = async (periode, from, to, specificDate) => {
   }
 
   if (periode === "bulanan") {
-    // 📅 TAHUN INI (Januari - Desember)
+    // 📅 BULANAN (Per bulan dalam 1 tahun)
     const targetYear = specificDate ? specificDate.split('-')[0] : new Date().getFullYear();
     query = `
       SELECT 
         MONTH(waktu_masuk) AS month_val,
         COUNT(*) AS total
       FROM log_parkir
-      WHERE YEAR(waktu_masuk) = ?
+      WHERE waktu_masuk >= ? AND waktu_masuk <= ?
       GROUP BY month_val
     `;
-    params.push(targetYear);
+    params.push(`${targetYear}-01-01 00:00:00`, `${targetYear}-12-31 23:59:59`);
     labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     displayLabels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
   }
 
+  console.log(`📊 [getStatistikByPeriode] Params: periode=${periode}, from=${from}, to=${to}, date=${specificDate}`);
+  console.log(`🔍 [getStatistikByPeriode] Query: ${query.replace(/\s+/g, ' ').trim()}`);
+  console.log(`📦 [getStatistikByPeriode] Params array:`, params);
+
   const rows = await db.query(query, params);
+  console.log(`📈 [getStatistikByPeriode] Rows returned:`, rows.length);
+
   const dataMap = {};
 
   rows.forEach((row) => {
     // Mapping key berdasarkan kolom yang tersedia di query
-    const key = row.hour_val !== undefined ? row.hour_val :
+    // Gunakan String() untuk key agar konsisten
+    const rawKey = row.hour_val !== undefined ? row.hour_val :
       row.day_val !== undefined ? row.day_val :
         row.month_val;
-    if (key !== undefined) dataMap[key] = row.total;
+
+    if (rawKey !== undefined && rawKey !== null) {
+      dataMap[String(rawKey)] = row.total;
+    }
   });
+
+  const finalData = labels.map((l) => dataMap[String(l)] || 0);
+  console.log(`✅ [getStatistikByPeriode] Final Labels:`, displayLabels);
+  console.log(`✅ [getStatistikByPeriode] Final Data:`, finalData);
 
   return {
     labels: displayLabels,
-    data: labels.map((l) => dataMap[l] || 0),
+    data: finalData,
   };
 };
 
