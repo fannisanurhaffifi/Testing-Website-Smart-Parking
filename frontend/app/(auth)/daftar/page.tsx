@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 /* ================= DATA JURUSAN & PRODI ================= */
 
@@ -95,6 +96,12 @@ export default function DaftarPage() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      setError("Format email tidak valid");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -173,8 +180,15 @@ export default function DaftarPage() {
             disabled={!form.jurusan}
           />
 
-          <Input required name="plat_nomor" placeholder="Nomor Kendaraan" value={form.plat_nomor} onChange={handleChange} />
-          <Input required name="password" type="password" placeholder="Kata Sandi" value={form.password} onChange={handleChange} />
+          <Input required name="plat_nomor" placeholder="BE XXXX XXX" value={form.plat_nomor} onChange={handleChange} />
+
+          <PasswordInput
+            required
+            name="password"
+            placeholder="Kata Sandi"
+            value={form.password}
+            onChange={handleChange}
+          />
 
           <button
             type="submit"
@@ -218,6 +232,31 @@ function Input({ name, type = "text", placeholder, value, onChange, required }: 
       placeholder={placeholder}
       className="w-full rounded-full border border-gray-300 px-4 py-2 text-sm transition hover:border-blue-600 focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
     />
+  );
+}
+
+function PasswordInput({ name, placeholder, value, onChange, required }: any) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <div className="relative">
+      <input
+        required={required}
+        name={name}
+        type={show ? "text" : "password"}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full rounded-full border border-gray-300 px-4 py-2 pr-11 text-sm transition hover:border-blue-600 focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
+      />
+      <button
+        type="button"
+        onClick={() => setShow(!show)}
+        className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-blue-700"
+      >
+        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
   );
 }
 

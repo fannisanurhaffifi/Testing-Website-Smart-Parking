@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
+    // ... (handleLogin stays the same)
     e.preventDefault();
 
     if (!identifier || !password) {
@@ -110,13 +112,10 @@ export default function LoginPage() {
                        focus:border-[#1F3A93] focus:outline-none focus:ring-1 focus:ring-[#1F3A93]"
           />
 
-          <input
-            type="password"
+          <PasswordInput
             placeholder="Kata Sandi"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-full border border-gray-300 px-4 py-2 text-sm
-                       focus:border-[#1F3A93] focus:outline-none focus:ring-1 focus:ring-[#1F3A93]"
+            onChange={(e: any) => setPassword(e.target.value)}
           />
 
           <button
@@ -149,6 +148,29 @@ export default function LoginPage() {
           </Link>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PasswordInput({ placeholder, value, onChange }: any) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <div className="relative">
+      <input
+        type={show ? "text" : "password"}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        className="w-full rounded-full border border-gray-300 px-4 py-2 pr-11 text-sm focus:border-[#1F3A93] focus:outline-none focus:ring-1 focus:ring-[#1F3A93]"
+      />
+      <button
+        type="button"
+        onClick={() => setShow(!show)}
+        className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-blue-900"
+      >
+        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
     </div>
   );
 }

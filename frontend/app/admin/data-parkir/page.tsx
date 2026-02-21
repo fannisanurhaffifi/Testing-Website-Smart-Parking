@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import StatCard from "@/app/components/StatCard";
 import DataKendaraanParkir from "@/app/components/DataKendaraanParkir";
 import { io } from "socket.io-client";
+import { Filter, Search, X } from "lucide-react";
 
 type DashboardSummary = {
   total_slot: number;
@@ -24,6 +25,7 @@ export default function DataParkirAdminPage() {
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [showFilter, setShowFilter] = useState(false);
 
   const fetchRef = useRef<any>(null);
 
@@ -111,8 +113,26 @@ export default function DataParkirAdminPage() {
         />
       </div>
 
+      {/* ================= HEADER & MOBILE FILTER TOGGLE ================= */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-[#1F3A93] md:text-xl">
+          Manajemen Data Parkir
+        </h2>
+
+        <button
+          onClick={() => setShowFilter(!showFilter)}
+          className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-xs font-bold text-[#1F3A93] shadow-sm border border-gray-200 md:hidden hover:bg-gray-50 transition active:scale-95"
+        >
+          {showFilter ? <X size={16} /> : <Filter size={16} />}
+          {showFilter ? "Tutup Filter" : "Filter Data"}
+        </button>
+      </div>
+
       {/* ================= FILTER ================= */}
-      <section className="rounded-xl border border-gray-300 bg-[#E9EBEE] p-5">
+      <section
+        className={`rounded-xl border border-gray-300 bg-[#E9EBEE] p-5 transition-all duration-300 ${showFilter ? "block" : "hidden md:block"
+          }`}
+      >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {/* SEARCH */}
           <div>

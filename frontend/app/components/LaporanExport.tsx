@@ -98,8 +98,8 @@ export default function LaporanExport() {
       </h3>
 
       {/* ===== PERIODE ===== */}
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div>
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="w-full">
           <label className="text-xs font-medium text-gray-600">Periode</label>
           <div className="relative">
             <select
@@ -110,7 +110,7 @@ export default function LaporanExport() {
                 setTo("");
                 setDateError("");
               }}
-              className="appearance-none mt-1 w-full rounded-md border border-gray-300 px-3 py-1.5 pr-8 text-xs bg-white focus:border-[#1F3A93] focus:outline-none focus:ring-1 focus:ring-[#1F3A93]"
+              className="appearance-none mt-1 w-full rounded-md border border-gray-300 px-3 py-2 sm:py-1.5 pr-8 text-xs bg-white focus:border-[#1F3A93] focus:outline-none focus:ring-1 focus:ring-[#1F3A93]"
               style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
             >
               <option value="harian">Harian</option>
@@ -123,30 +123,30 @@ export default function LaporanExport() {
               </svg>
             </div>
           </div>
-          <p className="mt-1 text-[10px] text-gray-500">
-            {periode === "harian" && "Pilih 1 hari yang sama"}
-            {periode === "mingguan" && "Otomatis 7 hari dari tanggal mulai"}
-            {periode === "bulanan" && "Otomatis 30 hari dari tanggal mulai"}
+          <p className="mt-1 text-[10px] text-gray-500 italic">
+            {periode === "harian" && "* Pilih 1 hari yang sama"}
+            {periode === "mingguan" && "* Otomatis 7 hari dari tanggal mulai"}
+            {periode === "bulanan" && "* Otomatis 30 hari dari tanggal mulai"}
           </p>
         </div>
 
-        <div>
+        <div className="w-full">
           <label className="text-xs font-medium text-gray-600">Dari</label>
           <input
             type="date"
             value={from}
             onChange={(e) => handleFromDateChange(e.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-1.5 text-xs focus:border-[#1F3A93] focus:outline-none focus:ring-1 focus:ring-[#1F3A93]"
+            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 sm:py-1.5 text-xs focus:border-[#1F3A93] focus:outline-none focus:ring-1 focus:ring-[#1F3A93]"
           />
         </div>
 
-        <div>
+        <div className="w-full">
           <label className="text-xs font-medium text-gray-600">Sampai</label>
           <input
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-1.5 text-xs focus:border-[#1F3A93] focus:outline-none focus:ring-1 focus:ring-[#1F3A93] bg-gray-50"
+            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 sm:py-1.5 text-xs focus:border-[#1F3A93] focus:outline-none focus:ring-1 focus:ring-[#1F3A93] bg-gray-50"
             readOnly
             title="Tanggal akhir otomatis disesuaikan dengan periode"
           />
@@ -161,16 +161,16 @@ export default function LaporanExport() {
       )}
 
       {/* ===== FORMAT FILE ===== */}
-      <div className="mb-4">
-        <label className="mb-2 block text-xs font-medium text-gray-600">
-          Format File
+      <div className="mb-6">
+        <label className="mb-3 block text-xs font-semibold text-[#1F3A93]">
+          Format File Export
         </label>
 
-        <div className="flex gap-6 text-xs">
+        <div className="flex flex-wrap gap-6 text-xs">
           {["pdf", "csv", "excel"].map((item) => (
             <label
               key={item}
-              className="flex cursor-pointer items-center gap-2"
+              className="flex cursor-pointer items-center gap-2 group"
             >
               <input
                 type="radio"
@@ -178,9 +178,11 @@ export default function LaporanExport() {
                 value={item}
                 checked={format === item}
                 onChange={() => setFormat(item as any)}
-                className="accent-[#1F3A93]"
+                className="w-4 h-4 accent-[#1F3A93] cursor-pointer"
               />
-              {item.toUpperCase()}
+              <span className={`font-medium ${format === item ? "text-[#1F3A93] font-bold" : "text-gray-600"}`}>
+                {item.toUpperCase()}
+              </span>
             </label>
           ))}
         </div>
@@ -191,7 +193,7 @@ export default function LaporanExport() {
         type="button"
         onClick={handleExport}
         disabled={!!dateError || !from || !to}
-        className="rounded-md bg-[#1F3A93] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#162C6E] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full sm:w-auto rounded-lg bg-[#1F3A93] px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#162C6E] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
       >
         Export Laporan
       </button>

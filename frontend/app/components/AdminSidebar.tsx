@@ -16,13 +16,14 @@ export default function AdminSidebar() {
   // ================= LOGOUT HANDLER =================
   const handleLogout = async () => {
     try {
-      await fetch("/api/logout", {
+      // Sesuaikan dengan endpoint yang benar
+      await fetch("/api/auth/logout", {
         method: "POST",
       });
 
-      // 🔥 HAPUS DATA LOGIN ADMIN
-      localStorage.removeItem("admin");
-      localStorage.removeItem("admin_id");
+      // 🔥 HAPUS DATA LOGIN ADMIN (sesuai dengan key di login page)
+      localStorage.removeItem("admin_nama");
+      localStorage.removeItem("id_admin");
 
       // Redirect ke login
       router.push("/");
@@ -32,10 +33,10 @@ export default function AdminSidebar() {
   };
 
   return (
-    // SIDEBAR HANYA MUNCUL DI DISPLAY BESAR (LG 1024px KE ATAS)
-    <aside className="hidden md:block w-64 bg-[#E9EBEE] p-4 h-screen sticky top-0">
+    // SIDEBAR: w-16 pada mobile (icons only), md:w-64 pada desktop
+    <aside className="w-16 md:w-64 bg-[#E9EBEE] p-2 md:p-4 h-screen sticky top-0 flex flex-col transition-all duration-300">
       {/* ===== MENU ===== */}
-      <nav className="space-y-2">
+      <nav className="space-y-2 flex-1">
         <SidebarItem
           href="/admin"
           icon={<BarChart3 size={18} />}
@@ -46,14 +47,14 @@ export default function AdminSidebar() {
         <SidebarItem
           href="/admin/statistik-pengguna"
           icon={<BarChart3 size={18} />}
-          label="Statistik Pengguna"
+          label="Statistik"
           active={isActive("/admin/statistik-pengguna")}
         />
 
         <SidebarItem
           href="/admin/pengguna-parkir"
           icon={<Users size={18} />}
-          label="Pengguna Parkir"
+          label="Pengguna"
           active={isActive("/admin/pengguna-parkir")}
         />
 
@@ -66,20 +67,21 @@ export default function AdminSidebar() {
       </nav>
 
       {/* ===== DIVIDER ===== */}
-      <hr className="my-6 border-gray-300" />
+      <hr className="my-6 border-gray-300 mx-2" />
 
       {/* ===== LOGOUT ===== */}
       <button
         type="button"
         onClick={handleLogout}
         className="
-          flex w-full items-center gap-3 rounded-lg
-          bg-red-600 px-4 py-2 text-sm font-semibold text-white
+          flex w-full items-center justify-center md:justify-start gap-3 rounded-lg
+          bg-red-600 px-2 md:px-4 py-2 text-sm font-semibold text-white
           transition hover:bg-red-700
         "
+        title="Keluar"
       >
         <LogOut size={18} />
-        Keluar
+        <span className="hidden md:block">Keluar</span>
       </button>
     </aside>
   );
@@ -101,13 +103,14 @@ function SidebarItem({
     <Link
       href={href}
       className={`
-        flex items-center gap-3 rounded-lg px-4 py-2
-        text-sm font-medium transition-colors duration-200
+        flex items-center justify-center md:justify-start gap-3 rounded-lg px-2 md:px-4 py-2
+        text-sm font-medium transition-all duration-200
         ${active}
       `}
+      title={label}
     >
       {icon}
-      {label}
+      <span className="hidden md:block whitespace-nowrap">{label}</span>
     </Link>
   );
 }

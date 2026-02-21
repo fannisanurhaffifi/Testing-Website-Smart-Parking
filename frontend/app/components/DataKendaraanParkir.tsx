@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ListFilter } from "lucide-react";
 import { io } from "socket.io-client";
 
 type Kendaraan = {
@@ -138,13 +138,16 @@ export default function DataKendaraanParkir({
   return (
     <section className="rounded-xl bg-[#E9EBEE] p-6 shadow-sm border border-gray-200">
       {/* ===== HEADER ===== */}
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-1">
-        <h2 className="text-sm font-semibold text-gray-800">
-          Data Kendaraan Parkir
-        </h2>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-1">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-gray-800">
+            Data Kendaraan Parkir
+          </h2>
+        </div>
 
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-600">Tampilkan</span>
+        <div className="flex items-center gap-2 text-[11px] sm:text-xs bg-white/50 p-1 px-2 rounded-lg border border-gray-300 sm:border-transparent sm:bg-transparent">
+          <ListFilter size={14} className="text-[#1F3A93] md:hidden" />
+          <span className="text-gray-600 font-medium">Tampilkan</span>
           <div className="relative">
             <select
               value={limit}
@@ -153,7 +156,7 @@ export default function DataKendaraanParkir({
                 setPage(1); // Reset page saat limit berubah
               }}
               className="appearance-none rounded-md border border-gray-300 px-2 py-1 pr-7 bg-white
-                focus:border-[#1F3A93] focus:outline-none"
+                focus:border-[#1F3A93] focus:outline-none text-[11px] sm:text-xs"
               style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
             >
               <option value={10}>10</option>
@@ -168,7 +171,7 @@ export default function DataKendaraanParkir({
               </svg>
             </div>
           </div>
-          <span className="text-gray-600">data per halaman</span>
+          <span className="text-gray-600 font-medium">data <span className="hidden sm:inline">per halaman</span></span>
         </div>
       </div>
 

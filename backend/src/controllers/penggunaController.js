@@ -326,6 +326,22 @@ const changePassword = async (req, res) => {
       });
     }
 
+    // Cek apakah password baru sama dengan password lama
+    const userRows = await query(
+      "SELECT password FROM pengguna WHERE npm = ? LIMIT 1",
+      [npm]
+    );
+
+    if (userRows.length > 0) {
+      const isSame = await bcrypt.compare(password_baru, userRows[0].password);
+      if (isSame) {
+        return res.status(400).json({
+          status: "error",
+          message: "Password baru tidak boleh sama dengan password lama",
+        });
+      }
+    }
+
     const hashed = await bcrypt.hash(password_baru, 10);
 
     await query(
@@ -448,6 +464,22 @@ const resetPasswordOtp = async (req, res) => {
         status: "error",
         message: "OTP tidak valid atau kadaluarsa",
       });
+    }
+
+    // Cek apakah password baru sama dengan password lama
+    const userRows = await query(
+      "SELECT password FROM pengguna WHERE email = ? LIMIT 1",
+      [email]
+    );
+
+    if (userRows.length > 0) {
+      const isSame = await bcrypt.compare(password_baru, userRows[0].password);
+      if (isSame) {
+        return res.status(400).json({
+          status: "error",
+          message: "Password baru tidak boleh sama dengan password lama",
+        });
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password_baru, 10);

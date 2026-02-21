@@ -145,6 +145,13 @@ export default function ProfilMahasiswaPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validasi ukuran file (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ukuran file foto profil terlalu besar. Maksimal 2MB.");
+      e.target.value = ""; // Reset input
+      return;
+    }
+
     setFotoFile(file);
     setPreviewFoto(URL.createObjectURL(file));
   };
@@ -152,6 +159,13 @@ export default function ProfilMahasiswaPage() {
   const handleStnkChange = (e: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validasi ukuran file (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ukuran file STNK terlalu besar. Maksimal 2MB.");
+      e.target.value = ""; // Reset input
+      return;
+    }
 
     setStnkFile(file);
     setPreviewStnk(URL.createObjectURL(file));
@@ -226,10 +240,11 @@ export default function ProfilMahasiswaPage() {
 
         <label
           htmlFor="uploadFoto"
-          className="cursor-pointer  text-xs font-semibold text-[#1F3A93] transition"
+          className="cursor-pointer text-xs font-semibold text-[#1F3A93] transition hover:text-blue-800"
         >
           Ubah Foto
         </label>
+        <p className="text-[10px] text-gray-400 mt-1">Maksimal 2MB</p>
 
         <div
           className={`rounded-full px-2 py-1 text-xs font-bold ${profil.status_akun === 1
