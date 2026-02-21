@@ -180,7 +180,7 @@ export default function DaftarPage() {
             disabled={!form.jurusan}
           />
 
-          <Input required name="plat_nomor" placeholder="BE XXXX XXX" value={form.plat_nomor} onChange={handleChange} />
+          <Input required name="plat_nomor" placeholder="Nomor Kendaraan (BE XXXX XXX)" value={form.plat_nomor} onChange={handleChange} />
 
           <PasswordInput
             required

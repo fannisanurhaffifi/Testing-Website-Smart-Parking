@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { io } from "socket.io-client";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Eye, EyeOff } from "lucide-react";
 
 /* ================= DATA JURUSAN ================= */
 
@@ -350,15 +350,17 @@ export default function ProfilMahasiswaPage() {
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field
+          <PasswordField
             label="Kata Sandi Baru"
-            type="password"
             name="password_baru"
+            value={profil.password_baru || ""}
+            onChange={handleChange}
           />
-          <Field
+          <PasswordField
             label="Konfirmasi Kata Sandi"
-            type="password"
             name="konfirmasi_password"
+            value={profil.konfirmasi_password || ""}
+            onChange={handleChange}
           />
         </div>
       </section>
@@ -417,6 +419,30 @@ function Select({ label, options, ...props }: any) {
           </option>
         ))}
       </select>
+    </div>
+  );
+}
+
+function PasswordField({ label, ...props }: any) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-medium text-gray-600">{label}</label>
+      <div className="relative">
+        <input
+          {...props}
+          type={show ? "text" : "password"}
+          className="w-full rounded border border-gray-300 px-3 py-1.5 pr-10 text-xs bg-white focus:border-[#1F3A93] focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => setShow(!show)}
+          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-[#1F3A93]"
+        >
+          {show ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
+      </div>
     </div>
   );
 }
