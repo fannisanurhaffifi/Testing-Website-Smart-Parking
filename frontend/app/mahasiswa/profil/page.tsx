@@ -49,6 +49,8 @@ export default function ProfilMahasiswaPage() {
   const [profil, setProfil] = useState<any>(null);
   const [previewFoto, setPreviewFoto] = useState<string | null>(null);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [stnkFile, setStnkFile] = useState<File | null>(null);
+  const [previewStnk, setPreviewStnk] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -72,6 +74,13 @@ export default function ProfilMahasiswaPage() {
             ? data.data.foto
             : `${process.env.NEXT_PUBLIC_API_URL}/uploads/${data.data.foto}`;
           setPreviewFoto(fotoUrl);
+        }
+
+        if (data.data?.stnk) {
+          const stnkUrl = data.data.stnk.startsWith("http")
+            ? data.data.stnk
+            : `${process.env.NEXT_PUBLIC_API_URL}/uploads/${data.data.stnk}`;
+          setPreviewStnk(stnkUrl);
         }
       }
     } catch (err: any) {
@@ -140,6 +149,14 @@ export default function ProfilMahasiswaPage() {
     setPreviewFoto(URL.createObjectURL(file));
   };
 
+  const handleStnkChange = (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setStnkFile(file);
+    setPreviewStnk(URL.createObjectURL(file));
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -150,6 +167,7 @@ export default function ProfilMahasiswaPage() {
       formData.append("angkatan", profil.angkatan || "");
       formData.append("plat_nomor", profil.plat_nomor || "");
       if (fotoFile) formData.append("foto", fotoFile);
+      if (stnkFile) formData.append("stnk", stnkFile);
 
       const res = await fetch("/api/users/profile", {
         method: "PUT",
@@ -271,27 +289,43 @@ export default function ProfilMahasiswaPage() {
         <h2 className="mb-4 text-sm font-semibold text-gray-800 border-b pb-2">
           Lampiran STNK
         </h2>
-        {profil.stnk ? (
-          <div className="mt-4 flex flex-col items-start gap-4">
-            <div className="relative h-40 w-64 overflow-hidden rounded-lg border border-gray-200 shadow-sm transition hover:shadow-md">
-              <img
-                src={profil.stnk.startsWith("http") ? profil.stnk : `${apiBase}/uploads/${profil.stnk}`}
-                alt="STNK"
-                className="h-full w-full object-contain bg-gray-50"
-              />
+
+        <div className="space-y-4">
+          {previewStnk ? (
+            <div className="flex flex-col items-start gap-4">
+              <div className="relative h-40 w-64 overflow-hidden rounded-lg border border-gray-200 shadow-sm transition hover:shadow-md">
+                <img
+                  src={previewStnk}
+                  alt="STNK"
+                  className="h-full w-full object-contain bg-gray-50"
+                />
+              </div>
+              <div className="flex gap-2">
+                <a
+                  href={previewStnk}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-100 transition"
+                >
+                  Buka Gambar Penuh ↗
+                </a>
+
+                <label className="cursor-pointer rounded bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-200 transition">
+                  Ganti File
+                  <input type="file" accept="image/*,.pdf" onChange={handleStnkChange} hidden />
+                </label>
+              </div>
             </div>
-            <a
-              href={profil.stnk.startsWith("http") ? profil.stnk : `${apiBase}/uploads/${profil.stnk}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-100 transition"
-            >
-              Buka Gambar Penuh ↗
-            </a>
-          </div>
-        ) : (
-          <p className="text-xs text-gray-400 italic">Belum ada lampiran STNK</p>
-        )}
+          ) : (
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-6 hover:border-blue-400 transition group">
+              <p className="text-xs text-gray-400 italic mb-3">Belum ada lampiran STNK</p>
+              <label className="cursor-pointer rounded-full bg-blue-900 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-800 transition active:scale-95">
+                Upload STNK
+                <input type="file" accept="image/*,.pdf" onChange={handleStnkChange} hidden />
+              </label>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ================= GANTI PASSWORD ================= */}

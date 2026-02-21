@@ -59,8 +59,6 @@ export default function DaftarPage() {
     plat_nomor: "",
   });
 
-  const [stnk, setStnk] = useState<File | null>(null);
-  const [fileName, setFileName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -78,14 +76,6 @@ export default function DaftarPage() {
     }));
   };
 
-  /* ================= HANDLE FILE ================= */
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setStnk(file);
-    setFileName(file ? file.name : "");
-  };
-
   /* ================= HANDLE SUBMIT ================= */
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,8 +89,7 @@ export default function DaftarPage() {
       !form.jurusan ||
       !form.prodi ||
       !form.password ||
-      !form.plat_nomor ||
-      !stnk
+      !form.plat_nomor
     ) {
       setError("Semua field wajib diisi");
       return;
@@ -113,8 +102,6 @@ export default function DaftarPage() {
       Object.entries(form).forEach(([key, value]) => {
         formData.append(key, value);
       });
-
-      if (stnk) formData.append("stnk", stnk);
 
       // 🔥 Pakai Next API, bukan langsung backend
       const res = await fetch("/api/auth/register", {
@@ -188,31 +175,6 @@ export default function DaftarPage() {
 
           <Input required name="plat_nomor" placeholder="Nomor Kendaraan" value={form.plat_nomor} onChange={handleChange} />
           <Input required name="password" type="password" placeholder="Kata Sandi" value={form.password} onChange={handleChange} />
-
-          {/* FILE UPLOAD */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-700">
-              Upload Foto / Scan STNK <span className="text-red-500">*</span>
-            </label>
-
-            <input
-              required
-              type="file"
-              accept="image/*,.pdf"
-              onChange={handleFileChange}
-              className="w-full text-xs sm:text-sm file:mr-3 file:rounded-full file:border-0 file:bg-blue-900 file:px-3 file:py-1 file:text-white transition hover:file:bg-blue-800"
-            />
-
-            {fileName && (
-              <p className="text-xs text-blue-700">
-                File dipilih: {fileName}
-              </p>
-            )}
-
-            <p className="text-[10px] sm:text-xs text-gray-500">
-              Format JPG, PNG atau PDF. Pastikan data terlihat jelas.
-            </p>
-          </div>
 
           <button
             type="submit"
