@@ -174,6 +174,33 @@ export default function ProfilMahasiswaPage() {
   const handleSave = async () => {
     try {
       setSaving(true);
+
+      // 1. CEK PERUBAHAN PASSWORD (JIKA DIISI)
+      if (profil.password_baru) {
+        if (profil.password_baru !== profil.konfirmasi_password) {
+          alert("Konfirmasi kata sandi tidak cocok!");
+          setSaving(false);
+          return;
+        }
+
+        const resPwd = await fetch("/api/users/change-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            npm: profil.npm,
+            password_baru: profil.password_baru,
+          }),
+        });
+
+        const dataPwd = await resPwd.json();
+        if (!resPwd.ok) {
+          alert(dataPwd.message || "Gagal mengubah kata sandi");
+          setSaving(false);
+          return;
+        }
+      }
+
+      // 2. LANJUT UPDATE PROFIL (FOTO, STNK, JURUSAN, DLL)
       const formData = new FormData();
       formData.append("npm", profil.npm);
       formData.append("jurusan", profil.jurusan || "");
@@ -191,6 +218,14 @@ export default function ProfilMahasiswaPage() {
       if (res.ok) {
         await fetchProfil(); // Segarkan data
         setShowToast(true);
+
+        // Kosongkan field password setelah berhasil
+        setProfil((prev: any) => ({
+          ...prev,
+          password_baru: "",
+          konfirmasi_password: "",
+        }));
+
         // Hide toast after 3 seconds
         setTimeout(() => setShowToast(false), 3000);
       } else {
