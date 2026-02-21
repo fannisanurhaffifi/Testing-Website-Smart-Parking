@@ -192,7 +192,17 @@ export default function ProfilMahasiswaPage() {
           }),
         });
 
-        const dataPwd = await resPwd.json();
+        // Ambil response body dengan aman
+        let dataPwd: any = {};
+        const contentTypePwd = resPwd.headers.get("content-type");
+        if (contentTypePwd && contentTypePwd.includes("application/json")) {
+          dataPwd = await resPwd.json();
+        } else {
+          const text = await resPwd.text();
+          console.error("Non-JSON Response (PWD):", text);
+          throw new Error(`Server ganti password mengembalikan respons non-JSON (${resPwd.status})`);
+        }
+
         if (!resPwd.ok) {
           alert(dataPwd.message || "Gagal mengubah kata sandi");
           setSaving(false);
@@ -215,6 +225,17 @@ export default function ProfilMahasiswaPage() {
         body: formData,
       });
 
+      // Ambil response body dengan aman
+      let responseData: any = {};
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        responseData = await res.json();
+      } else {
+        const text = await res.text();
+        console.error("Non-JSON response:", text);
+        throw new Error(`Server returned non-JSON response (${res.status})`);
+      }
+
       if (res.ok) {
         await fetchProfil(); // Segarkan data
         setShowToast(true);
@@ -229,12 +250,11 @@ export default function ProfilMahasiswaPage() {
         // Hide toast after 3 seconds
         setTimeout(() => setShowToast(false), 3000);
       } else {
-        const errorData = await res.json();
-        alert(errorData.message || "Gagal memperbarui profil");
+        alert(responseData.message || "Gagal memperbarui profil");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("SAVE PROFIL ERROR:", error);
-      alert("Terjadi kesalahan saat menyimpan profil");
+      alert(`Terjadi kesalahan saat menyimpan profil: ${error.message || "Unknown error"}`);
     } finally {
       setSaving(false);
     }
