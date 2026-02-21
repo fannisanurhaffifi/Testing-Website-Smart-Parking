@@ -305,17 +305,31 @@ const getDataParkir = async (req, res) => {
 
     const formattedData = rows.map(r => {
       const masukDate = r.waktu_masuk ? new Date(r.waktu_masuk) : null;
-      const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const keluarDate = r.waktu_keluar ? new Date(r.waktu_keluar) : null;
+
+      const optionsDate = { timeZone: "Asia/Jakarta" };
+      const optionsTime = {
+        timeZone: "Asia/Jakarta",
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      };
 
       return {
         npm: r.npm || "-",
         nama: r.nama || "Tanpa Identitas",
         plat_motor: r.plat_nomor || "-",
-        tanggal: (masukDate && !isNaN(masukDate.getTime())) ? masukDate.toLocaleDateString("id-ID") : "-",
-        hari: (masukDate && !isNaN(masukDate.getTime())) ? days[masukDate.getDay()] : "-",
-        masuk: (masukDate && !isNaN(masukDate.getTime())) ? masukDate.toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' }) : "-",
-        keluar: r.waktu_keluar && !isNaN(new Date(r.waktu_keluar).getTime())
-          ? new Date(r.waktu_keluar).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })
+        tanggal: (masukDate && !isNaN(masukDate.getTime()))
+          ? masukDate.toLocaleDateString("id-ID", optionsDate)
+          : "-",
+        hari: (masukDate && !isNaN(masukDate.getTime()))
+          ? masukDate.toLocaleDateString("id-ID", { ...optionsDate, weekday: 'long' })
+          : "-",
+        masuk: (masukDate && !isNaN(masukDate.getTime()))
+          ? masukDate.toLocaleTimeString("id-ID", optionsTime)
+          : "-",
+        keluar: (keluarDate && !isNaN(keluarDate.getTime()))
+          ? keluarDate.toLocaleTimeString("id-ID", optionsTime)
           : "-",
         status: r.status_parkir === "MASUK" ? "Terparkir" : "Keluar"
       };
@@ -368,9 +382,11 @@ const exportParkirPDF = async (req, res) => {
     doc.moveDown();
 
     rows.forEach((r, i) => {
+      const masuk = r.waktu_masuk ? new Date(r.waktu_masuk).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }) : "-";
+      const keluar = r.waktu_keluar ? new Date(r.waktu_keluar).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }) : "-";
+
       doc.fontSize(10).text(
-        `${i + 1}. ${r.nama} | ${r.plat_nomor} | ${r.waktu_masuk} - ${r.waktu_keluar || "-"
-        } | ${r.status_parkir}`
+        `${i + 1}. ${r.nama || "Tanpa Nama"} | ${r.plat_nomor || "-"} | ${masuk} - ${keluar} | ${r.status_parkir}`
       );
     });
 
